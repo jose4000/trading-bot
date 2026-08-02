@@ -1,0 +1,104 @@
+.tab__analysis {
+    padding: 24px;
+
+    &__header {
+        margin-bottom: 24px;
+    }
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+}
+
+.analysis-card {
+    border: 1px solid var(--border-normal, #333);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--background-secondary, #1a1a1a);
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    &__circles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    &__rival {
+        margin-bottom: 8px;
+    }
+
+    &__signals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+}
+
+.digit-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 52px;
+
+    &__track {
+        fill: none;
+        stroke: var(--background-tertiary, #262626);
+        stroke-width: 4;
+    }
+
+    &__fill {
+        fill: none;
+        stroke: var(--brand-primary, #ff444f);
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.3s ease;
+    }
+
+    &__number {
+        font-size: 14px;
+        font-weight: 700;
+        fill: var(--text-general, #fff);
+    }
+
+    &--top &__fill {
+        stroke: #4caf50;
+    }
+
+    &--rival &__fill {
+        stroke: #ffc107;
+    }
+}
+
+.signal-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: var(--background-tertiary, #262626);
+
+    &--even,
+    &--odd {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+    }
+
+    &--over,
+    &--under {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+
+    &--none {
+        color: var(--text-less-prominent, #999);
+    }
+}
