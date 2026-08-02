@@ -1,5 +1,5 @@
 {
-    "brand_name": "YourBrand",
+    "brand_name": "TradeMatrix Bots",
     "brand_domain": "yourbrand.com",
     "brand_hostname": {
         "staging": "staging.yourbrand.com/dashboard",
@@ -73,7 +73,7 @@
         },
         "hostname": {
             "production": {
-                "com": "bot.yourbrand.com"
+                "com": "trading-bot-liart-nine.vercel.app"
             },
             "staging": {
                 "com": "staging-bot.yourbrand.com"
