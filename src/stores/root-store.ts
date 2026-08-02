@@ -13,6 +13,7 @@ import LoadModalStore from './load-modal-store';
 import QuickStrategyStore from './quick-strategy-store';
 import RunPanelStore from './run-panel-store';
 import SaveModalStore from './save-modal-store';
+import ScannerStore from './scanner-store';
 import SummaryCardStore from './summary-card-store';
 import ToolbarStore from './toolbar-store';
 import ToolboxStore from './toolbox-store';
@@ -45,6 +46,8 @@ export default class RootStore {
     public ui: UiStore;
     public client: ClientStore;
     public common: CommonStore;
+
+    public scanner: ScannerStore;
 
     core = {
         ui: {},
@@ -83,5 +86,6 @@ export default class RootStore {
         this.chart_store = new ChartStore(this);
         this.blockly_store = new BlocklyStore(this);
         this.data_collection_store = new DataCollectionStore(this, this.core);
+        this.scanner = new ScannerStore(this);
     }
 }
