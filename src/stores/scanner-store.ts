@@ -1,5 +1,6 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-import { digit_scanner_service, VOLATILITY_SYMBOLS, TDigitStats } from '@/services/scanner/digit-scanner-service';
+import { scanner_engine } from '@/services/scanner/ScannerEngine';
+import { VOLATILITY_SYMBOLS, TSymbolAnalysis } from '@/services/scanner/types';
 import RootStore from './root-store';
 
 export default class ScannerStore {
@@ -11,24 +12,33 @@ export default class ScannerStore {
             is_scanning: observable,
             startScanning: action,
             stopScanning: action,
+            setWindowSize: action,
             symbol_stats: computed,
         });
         this.root_store = root_store;
     }
 
     startScanning = () => {
-        digit_scanner_service.start();
+        scanner_engine.start();
         this.is_scanning = true;
     };
 
     stopScanning = () => {
-        digit_scanner_service.stop();
+        scanner_engine.stop();
         this.is_scanning = false;
     };
 
-    get symbol_stats(): TDigitStats[] {
-        return VOLATILITY_SYMBOLS.map(symbol => digit_scanner_service.stats[symbol]);
+    setWindowSize = (size: number) => {
+        scanner_engine.setWindowSize(size);
+    };
+
+    getWindowSize = () => scanner_engine.getWindowSize();
+
+    get symbol_stats(): TSymbolAnalysis[] {
+        return VOLATILITY_SYMBOLS.map(symbol => scanner_engine.getAnalysis(symbol));
     }
 
-    getPercentages = (symbol: string) => digit_scanner_service.getDigitPercentages(symbol);
+    getAnalysis = (symbol: string): TSymbolAnalysis => scanner_engine.getAnalysis(symbol);
+
+    getPercentages = (symbol: string): number[] => scanner_engine.getAnalysis(symbol).frequency.percentages;
 }

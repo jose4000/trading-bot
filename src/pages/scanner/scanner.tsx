@@ -5,7 +5,7 @@ import Text from '@/components/shared_ui/text';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
-import { VOLATILITY_SYMBOLS } from '@/services/scanner/digit-scanner-service';
+import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import './scanner.scss';
 
 const DIGIT_LABELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -40,14 +40,14 @@ const ScannerComponent = observer(() => {
                     {localize('Digit Scanner')}
                 </Text>
                 <Text as='p' color='prominent' lineHeight='s' size={isDesktop ? 's' : 'xxs'} className='subtitle'>
-                    {localize('Live last-digit distribution across Volatility Indices — window: last 100 ticks')}
+                    {localize('Live last-digit distribution across Volatility Indices')}
                 </Text>
             </div>
 
             <div className='scanner-grid'>
                 {scanner.symbol_stats.map(stat => {
                     const percentages = scanner.getPercentages(stat.symbol);
-                    const tick_count = stat.digits.length;
+                    const tick_count = stat.tick_count;
 
                     return (
                         <div className='scanner-card' key={stat.symbol}>
@@ -56,7 +56,7 @@ const ScannerComponent = observer(() => {
                                     {SYMBOL_DISPLAY_NAMES[stat.symbol] ?? stat.symbol}
                                 </Text>
                                 <Text size='xs'>
-                                    {localize('Last:')} <strong>{stat.last_digit ?? '—'}</strong>
+                                    {localize('Last:')} <strong>{stat.streaks.current_digit ?? '—'}</strong>
                                 </Text>
                             </div>
 
@@ -94,13 +94,8 @@ const ScannerComponent = observer(() => {
 
                             <div className='scanner-card__footer'>
                                 <Text size='xxxs' color='less-prominent'>
-                                    {tick_count}/100 {localize('ticks')}
+                                    {tick_count}/{scanner.getWindowSize()} {localize('ticks')}
                                 </Text>
-                                {stat.last_price !== null && (
-                                    <Text size='xxxs' color='less-prominent'>
-                                        {localize('Price:')} {stat.last_price}
-                                    </Text>
-                                )}
                             </div>
                         </div>
                     );

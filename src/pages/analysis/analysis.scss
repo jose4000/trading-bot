@@ -45,9 +45,16 @@
     margin-bottom: 16px;
 }
 
+.digit-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 12px;
+}
+
 .digit-row-wrapper {
     position: relative;
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .digit-pointer {

@@ -5,7 +5,7 @@ import Text from '@/components/shared_ui/text';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
-import { VOLATILITY_SYMBOLS } from '@/services/scanner/digit-scanner-service';
+import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import './analysis.scss';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -27,14 +27,11 @@ const DEFAULT_WINDOW = 1000;
 
 type TDigitRank = 'most' | 'second_most' | 'second_least' | 'least' | 'default';
 
-// Rank every digit 0-9 by frequency, tag the 4 extremes
 function getDigitRanks(percentages: number[]): Record<number, TDigitRank> {
     const ranks: Record<number, TDigitRank> = {};
     for (let i = 0; i < 10; i++) ranks[i] = 'default';
 
-    const sorted = percentages
-        .map((pct, digit) => ({ digit, pct }))
-        .sort((a, b) => b.pct - a.pct);
+    const sorted = percentages.map((pct, digit) => ({ digit, pct })).sort((a, b) => b.pct - a.pct);
 
     if (sorted[0]) ranks[sorted[0].digit] = 'most';
     if (sorted[1]) ranks[sorted[1].digit] = 'second_most';
@@ -53,18 +50,20 @@ function getEvenOddPct(percentages: number[]) {
 const AnalysisComponent = observer(() => {
     const { scanner } = useStore();
     const { isDesktop } = useDevice();
-    const [active_symbol, setActiveSymbol] = React.useState(VOLATILITY_SYMBOLS[4]); // default R_100
+    const [active_symbol, setActiveSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [window_size, setWindowSize] = React.useState(DEFAULT_WINDOW);
 
     React.useEffect(() => {
         scanner.startScanning();
+        scanner.setWindowSize(window_size);
         return () => scanner.stopScanning();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scanner]);
 
     const percentages = scanner.getPercentages(active_symbol);
     const stat = scanner.symbol_stats.find(s => s.symbol === active_symbol);
-    const tick_count = stat?.digits.length ?? 0;
-    const last_digit = stat?.last_digit ?? null;
+    const tick_count = stat?.tick_count ?? 0;
+    const last_digit = stat?.streaks.current_digit ?? null;
     const ranks = getDigitRanks(percentages);
     const { even, odd } = getEvenOddPct(percentages);
 
@@ -100,7 +99,10 @@ const AnalysisComponent = observer(() => {
                         value={window_size}
                         onChange={e => {
                             const val = Number(e.target.value);
-                            if (val >= MIN_WINDOW && val <= MAX_WINDOW) setWindowSize(val);
+                            if (val >= MIN_WINDOW && val <= MAX_WINDOW) {
+                                setWindowSize(val);
+                                scanner.setWindowSize(val);
+                            }
                         }}
                     />
                     <Text size='xxxs' color='less-prominent'>
@@ -116,26 +118,35 @@ const AnalysisComponent = observer(() => {
             <Text as='h3' size='s' weight='bold' className='distribution-title'>
                 {localize('Distribution')}
             </Text>
+{/* Wnt to replace some code her */}
+            <div className='digit-grid'>
+                {[
+                    [0, 1, 2, 3, 4],
+                    [5, 6, 7, 8, 9],
+                ].map((row_digits, row_index) => (
+                    <div className='digit-row-wrapper' key={row_index}>
+                        {last_digit !== null && row_digits.includes(last_digit) && (
+                            <div
+                                className='digit-pointer'
+                                style={{ left: `${(row_digits.indexOf(last_digit) + 0.5) * (100 / 5)}%` }}
+                            />
+                        )}
 
-            <div className='digit-row-wrapper'>
-                {/* single pointer, absolutely positioned, animates between digit slots */}
-                {last_digit !== null && (
-                    <div
-                        className='digit-pointer'
-                        style={{ left: `${(last_digit + 0.5) * (100 / 10)}%` }}
-                    />
-                )}
-
-                <div className='digit-row'>
-                    {percentages.map((pct, digit) => (
-                        <div className='digit-cell' key={digit}>
-                            <div className={classNames('digit-circle', `digit-circle--${ranks[digit]}`)}>
-                                <span className='digit-circle__number'>{digit}</span>
-                                <span className='digit-circle__pct'>{pct.toFixed(1)}%</span>
-                            </div>
+                        <div className='digit-row'>
+                            {row_digits.map(digit => {
+                                const pct = percentages[digit];
+                                return (
+                                    <div className='digit-cell' key={digit}>
+                                        <div className={classNames('digit-circle', `digit-circle--${ranks[digit]}`)}>
+                                            <span className='digit-circle__number'>{digit}</span>
+                                            <span className='digit-circle__pct'>{pct.toFixed(1)}%</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
 
             <div className='digit-legend'>
