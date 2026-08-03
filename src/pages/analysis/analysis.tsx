@@ -21,168 +21,155 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     '1HZ100V': 'Volatility 100 (1s) Index',
 };
 
-const SIGNAL_THRESHOLD = 12; // %
-const RIVAL_GAP_THRESHOLD = 0.4; // %
+const MIN_WINDOW = 50;
+const MAX_WINDOW = 5000;
+const DEFAULT_WINDOW = 1000;
 
-type TSignal = { label: string; type: 'even' | 'odd' | 'over' | 'under' };
+type TDigitRank = 'most' | 'second_most' | 'second_least' | 'least' | 'default';
 
-// Determine active strategy signals for a symbol based on digit percentages
-function getSignals(percentages: number[]): TSignal[] {
-    const signals: TSignal[] = [];
+// Rank every digit 0-9 by frequency, tag the 4 extremes
+function getDigitRanks(percentages: number[]): Record<number, TDigitRank> {
+    const ranks: Record<number, TDigitRank> = {};
+    for (let i = 0; i < 10; i++) ranks[i] = 'default';
 
-    // Even market: digit 4 >= 12%
-    if (percentages[4] >= SIGNAL_THRESHOLD) {
-        signals.push({ label: localize('Even'), type: 'even' });
-    }
+    const sorted = percentages
+        .map((pct, digit) => ({ digit, pct }))
+        .sort((a, b) => b.pct - a.pct);
 
-    // Odd market: digit 5 >= 12%
-    if (percentages[5] >= SIGNAL_THRESHOLD) {
-        signals.push({ label: localize('Odd'), type: 'odd' });
-    }
+    if (sorted[0]) ranks[sorted[0].digit] = 'most';
+    if (sorted[1]) ranks[sorted[1].digit] = 'second_most';
+    if (sorted[8]) ranks[sorted[8].digit] = 'second_least';
+    if (sorted[9]) ranks[sorted[9].digit] = 'least';
 
-    // Over 3: any even digit >= 12%, digit 6 is the primary trigger
-    const even_digits = [0, 2, 4, 6, 8];
-    if (even_digits.some(d => percentages[d] >= SIGNAL_THRESHOLD)) {
-        signals.push({ label: localize('Over 3'), type: 'over' });
-    }
-
-    // Under 7: any odd digit >= 12%
-    const odd_digits = [1, 3, 5, 7];
-    if (odd_digits.some(d => percentages[d] >= SIGNAL_THRESHOLD)) {
-        signals.push({ label: localize('Under 7'), type: 'under' });
-    }
-
-    return signals;
+    return ranks;
 }
 
-// Top digit and its rival (2nd highest), plus whether the gap between them is meaningful
-function getTopAndRival(percentages: number[]) {
-    const indexed = percentages.map((pct, digit) => ({ digit, pct }));
-    indexed.sort((a, b) => b.pct - a.pct);
-    const top = indexed[0];
-    const rival = indexed[1];
-    const gap = top.pct - rival.pct;
-    return { top, rival, is_valid_gap: gap >= RIVAL_GAP_THRESHOLD };
+function getEvenOddPct(percentages: number[]) {
+    const even = [0, 2, 4, 6, 8].reduce((sum, d) => sum + percentages[d], 0);
+    const odd = [1, 3, 5, 7, 9].reduce((sum, d) => sum + percentages[d], 0);
+    return { even, odd };
 }
-
-const DigitCircle: React.FC<{ digit: number; pct: number; is_top: boolean; is_rival: boolean }> = ({
-    digit,
-    pct,
-    is_top,
-    is_rival,
-}) => {
-    const radius = 22;
-    const circumference = 2 * Math.PI * radius;
-    // Scale percentage visually: 0-20% maps to 0-100% of the ring for readability
-    const fill_ratio = Math.min(pct / 20, 1);
-    const offset = circumference * (1 - fill_ratio);
-
-    return (
-        <div
-            className={classNames('digit-circle', {
-                'digit-circle--top': is_top,
-                'digit-circle--rival': is_rival,
-            })}
-        >
-            <svg viewBox='0 0 56 56' width='56' height='56'>
-                <circle cx='28' cy='28' r={radius} className='digit-circle__track' />
-                <circle
-                    cx='28'
-                    cy='28'
-                    r={radius}
-                    className='digit-circle__fill'
-                    strokeDasharray={circumference}
-                    strokeDashoffset={offset}
-                    transform='rotate(-90 28 28)'
-                />
-                <text x='28' y='32' textAnchor='middle' className='digit-circle__number'>
-                    {digit}
-                </text>
-            </svg>
-            <Text size='xxxs' color='less-prominent'>
-                {pct.toFixed(1)}%
-            </Text>
-        </div>
-    );
-};
 
 const AnalysisComponent = observer(() => {
     const { scanner } = useStore();
     const { isDesktop } = useDevice();
+    const [active_symbol, setActiveSymbol] = React.useState(VOLATILITY_SYMBOLS[4]); // default R_100
+    const [window_size, setWindowSize] = React.useState(DEFAULT_WINDOW);
 
     React.useEffect(() => {
         scanner.startScanning();
         return () => scanner.stopScanning();
     }, [scanner]);
 
+    const percentages = scanner.getPercentages(active_symbol);
+    const stat = scanner.symbol_stats.find(s => s.symbol === active_symbol);
+    const tick_count = stat?.digits.length ?? 0;
+    const last_digit = stat?.last_digit ?? null;
+    const ranks = getDigitRanks(percentages);
+    const { even, odd } = getEvenOddPct(percentages);
+
     return (
         <div className='tab__analysis'>
             <div className='tab__analysis__header'>
                 <Text as='h2' color='prominent' size={isDesktop ? 'sm' : 's'} lineHeight='xxl' weight='bold'>
-                    {localize('D-Circles Analysis')}
+                    {localize('Analysis Tool')}
                 </Text>
                 <Text as='p' color='prominent' lineHeight='s' size={isDesktop ? 's' : 'xxs'} className='subtitle'>
-                    {localize(
-                        'Digit circle analysis for Over/Under and Even/Odd strategies — signals trigger at 12%+ concentration'
-                    )}
+                    {localize('Digit distribution analysis for Volatility Indices')}
                 </Text>
             </div>
 
-            <div className='analysis-grid'>
-                {VOLATILITY_SYMBOLS.map(symbol => {
-                    const percentages = scanner.getPercentages(symbol);
-                    const stat = scanner.symbol_stats.find(s => s.symbol === symbol);
-                    const tick_count = stat?.digits.length ?? 0;
-                    const signals = getSignals(percentages);
-                    const { top, rival, is_valid_gap } = getTopAndRival(percentages);
+            <div className='analysis-controls'>
+                <select
+                    className='analysis-controls__symbol'
+                    value={active_symbol}
+                    onChange={e => setActiveSymbol(e.target.value)}
+                >
+                    {VOLATILITY_SYMBOLS.map(symbol => (
+                        <option key={symbol} value={symbol}>
+                            {SYMBOL_DISPLAY_NAMES[symbol] ?? symbol}
+                        </option>
+                    ))}
+                </select>
 
-                    return (
-                        <div className='analysis-card' key={symbol}>
-                            <div className='analysis-card__header'>
-                                <Text size='xs' weight='bold'>
-                                    {SYMBOL_DISPLAY_NAMES[symbol] ?? symbol}
-                                </Text>
-                                <Text size='xxxs' color='less-prominent'>
-                                    {tick_count}/100 {localize('ticks')}
-                                </Text>
-                            </div>
+                <div className='analysis-controls__window'>
+                    <input
+                        type='number'
+                        min={MIN_WINDOW}
+                        max={MAX_WINDOW}
+                        value={window_size}
+                        onChange={e => {
+                            const val = Number(e.target.value);
+                            if (val >= MIN_WINDOW && val <= MAX_WINDOW) setWindowSize(val);
+                        }}
+                    />
+                    <Text size='xxxs' color='less-prominent'>
+                        ({MIN_WINDOW}–{MAX_WINDOW})
+                    </Text>
+                </div>
 
-                            <div className='analysis-card__circles'>
-                                {percentages.map((pct, digit) => (
-                                    <DigitCircle
-                                        key={digit}
-                                        digit={digit}
-                                        pct={pct}
-                                        is_top={digit === top.digit}
-                                        is_rival={digit === rival.digit}
-                                    />
-                                ))}
-                            </div>
+                <Text size='xxxs' color='less-prominent'>
+                    {tick_count}/{window_size} {localize('ticks captured')}
+                </Text>
+            </div>
 
-                            <div className='analysis-card__rival'>
-                                <Text size='xxxs' color='less-prominent'>
-                                    {localize('Top:')} <strong>{top.digit}</strong> ({top.pct.toFixed(1)}%) —{' '}
-                                    {localize('Rival:')} <strong>{rival.digit}</strong> ({rival.pct.toFixed(1)}%)
-                                    {is_valid_gap && ` · ${localize('valid gap')}`}
-                                </Text>
-                            </div>
+            <Text as='h3' size='s' weight='bold' className='distribution-title'>
+                {localize('Distribution')}
+            </Text>
 
-                            <div className='analysis-card__signals'>
-                                {signals.length === 0 && (
-                                    <span className='signal-badge signal-badge--none'>{localize('No signal')}</span>
-                                )}
-                                {signals.map(signal => (
-                                    <span
-                                        key={signal.type}
-                                        className={classNames('signal-badge', `signal-badge--${signal.type}`)}
-                                    >
-                                        {signal.label}
-                                    </span>
-                                ))}
+            <div className='digit-row-wrapper'>
+                {/* single pointer, absolutely positioned, animates between digit slots */}
+                {last_digit !== null && (
+                    <div
+                        className='digit-pointer'
+                        style={{ left: `${(last_digit + 0.5) * (100 / 10)}%` }}
+                    />
+                )}
+
+                <div className='digit-row'>
+                    {percentages.map((pct, digit) => (
+                        <div className='digit-cell' key={digit}>
+                            <div className={classNames('digit-circle', `digit-circle--${ranks[digit]}`)}>
+                                <span className='digit-circle__number'>{digit}</span>
+                                <span className='digit-circle__pct'>{pct.toFixed(1)}%</span>
                             </div>
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
+            </div>
+
+            <div className='digit-legend'>
+                <span className='digit-legend__item'>
+                    <span className='digit-legend__dot digit-legend__dot--most' /> {localize('Most frequent')}
+                </span>
+                <span className='digit-legend__item'>
+                    <span className='digit-legend__dot digit-legend__dot--second_most' /> {localize('2nd most')}
+                </span>
+                <span className='digit-legend__item'>
+                    <span className='digit-legend__dot digit-legend__dot--second_least' /> {localize('2nd least')}
+                </span>
+                <span className='digit-legend__item'>
+                    <span className='digit-legend__dot digit-legend__dot--least' /> {localize('Least frequent')}
+                </span>
+            </div>
+
+            <div className='even-odd-panels'>
+                <div className={classNames('even-odd-panel', { 'even-odd-panel--active': even >= 50 })}>
+                    <Text size='s' weight='bold'>
+                        {localize('Even')}
+                    </Text>
+                    <Text size='xs' color='less-prominent'>
+                        {even.toFixed(1)}%
+                    </Text>
+                </div>
+                <div className={classNames('even-odd-panel', { 'even-odd-panel--active': odd >= 50 })}>
+                    <Text size='s' weight='bold'>
+                        {localize('Odd')}
+                    </Text>
+                    <Text size='xs' color='less-prominent'>
+                        {odd.toFixed(1)}%
+                    </Text>
+                </div>
             </div>
         </div>
     );
