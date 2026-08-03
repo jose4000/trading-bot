@@ -15,3 +15,11 @@ performVersionCheck();
 // Removed AnalyticsInitializer() call - analytics dependency removed
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<AuthWrapper />);
+
+// Wait for two animation frames to guarantee the app has actually painted
+// before hiding the splash — avoids a flash of blank screen.
+requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('voltra:app-ready'));
+    });
+});
