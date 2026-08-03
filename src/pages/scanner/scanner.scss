@@ -17,6 +17,13 @@
     }
 }
 
+#id-scanner,
+#id-analysis {
+    overflow-y: auto !important;
+    height: 100% !important;
+    max-height: none !important;
+}
+
 .subtitle {
     margin-top: 4px;
     color: #666;

@@ -1,5 +1,18 @@
+#id-scanner,
+#id-analysis {
+    overflow-y: auto !important;
+    height: 100% !important;
+    max-height: none !important;
+}
+
+
+
+
 .tab__analysis {
     padding: 24px;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 
     &__header {
         margin-bottom: 20px;
