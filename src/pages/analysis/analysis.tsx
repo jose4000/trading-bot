@@ -47,11 +47,34 @@ function getEvenOddPct(percentages: number[]) {
     return { even, odd };
 }
 
+function getOverUnderPct(percentages: number[], barrier: number) {
+    let over = 0;
+    let under = 0;
+    percentages.forEach((pct, digit) => {
+        if (digit > barrier) over += pct;
+        else if (digit < barrier) under += pct;
+    });
+    return { over, under };
+}
+
+function getMatchesDiffersPct(percentages: number[], target: number) {
+    const matches = percentages[target] ?? 0;
+    const differs = 100 - matches;
+    return { matches, differs };
+}
+
+function getMostFrequentDigit(ranks: Record<number, TDigitRank>): number {
+    const entry = Object.entries(ranks).find(([, rank]) => rank === 'most');
+    return entry ? Number(entry[0]) : 0;
+}
+
 const AnalysisComponent = observer(() => {
     const { scanner } = useStore();
     const { isDesktop } = useDevice();
     const [active_symbol, setActiveSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [window_size, setWindowSize] = React.useState(DEFAULT_WINDOW);
+    const [over_under_barrier, setOverUnderBarrier] = React.useState(5);
+    const [matches_target, setMatchesTarget] = React.useState<number | null>(null);
 
     React.useEffect(() => {
         scanner.startScanning();
@@ -66,6 +89,10 @@ const AnalysisComponent = observer(() => {
     const last_digit = stat?.streaks.current_digit ?? null;
     const ranks = getDigitRanks(percentages);
     const { even, odd } = getEvenOddPct(percentages);
+    const { over, under } = getOverUnderPct(percentages, over_under_barrier);
+
+    const matches_digit = matches_target ?? getMostFrequentDigit(ranks);
+    const { matches, differs } = getMatchesDiffersPct(percentages, matches_digit);
 
     return (
         <div className='tab__analysis'>
@@ -118,7 +145,7 @@ const AnalysisComponent = observer(() => {
             <Text as='h3' size='s' weight='bold' className='distribution-title'>
                 {localize('Distribution')}
             </Text>
-{/* Wnt to replace some code her */}
+
             <div className='digit-grid'>
                 {[
                     [0, 1, 2, 3, 4],
@@ -164,22 +191,97 @@ const AnalysisComponent = observer(() => {
                 </span>
             </div>
 
-            <div className='even-odd-panels'>
-                <div className={classNames('even-odd-panel', { 'even-odd-panel--active': even >= 50 })}>
-                    <Text size='s' weight='bold'>
-                        {localize('Even')}
-                    </Text>
-                    <Text size='xs' color='less-prominent'>
-                        {even.toFixed(1)}%
-                    </Text>
+            <div className='strategy-panels'>
+                <Text as='h3' size='s' weight='bold' className='strategy-panels__title'>
+                    {localize('Even / Odd')}
+                </Text>
+                <div className='even-odd-panels'>
+                    <div className={classNames('even-odd-panel', { 'even-odd-panel--active': even >= 50 })}>
+                        <Text size='s' weight='bold'>
+                            {localize('Even')}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {even.toFixed(1)}%
+                        </Text>
+                    </div>
+                    <div className={classNames('even-odd-panel', { 'even-odd-panel--active': odd >= 50 })}>
+                        <Text size='s' weight='bold'>
+                            {localize('Odd')}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {odd.toFixed(1)}%
+                        </Text>
+                    </div>
                 </div>
-                <div className={classNames('even-odd-panel', { 'even-odd-panel--active': odd >= 50 })}>
-                    <Text size='s' weight='bold'>
-                        {localize('Odd')}
+
+                <div className='strategy-panels__header'>
+                    <Text as='h3' size='s' weight='bold'>
+                        {localize('Over / Under')}
                     </Text>
-                    <Text size='xs' color='less-prominent'>
-                        {odd.toFixed(1)}%
+                    <select
+                        className='strategy-panels__barrier-select'
+                        value={over_under_barrier}
+                        onChange={e => setOverUnderBarrier(Number(e.target.value))}
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+                            <option key={d} value={d}>
+                                {localize('Barrier')} {d}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='even-odd-panels'>
+                    <div className={classNames('even-odd-panel', { 'even-odd-panel--active': over >= 50 })}>
+                        <Text size='s' weight='bold'>
+                            {localize('Over')} {over_under_barrier}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {over.toFixed(1)}%
+                        </Text>
+                    </div>
+                    <div className={classNames('even-odd-panel', { 'even-odd-panel--active': under >= 50 })}>
+                        <Text size='s' weight='bold'>
+                            {localize('Under')} {over_under_barrier}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {under.toFixed(1)}%
+                        </Text>
+                    </div>
+                </div>
+
+                <div className='strategy-panels__header'>
+                    <Text as='h3' size='s' weight='bold'>
+                        {localize('Matches / Differs')}
                     </Text>
+                    <select
+                        className='strategy-panels__barrier-select'
+                        value={matches_digit}
+                        onChange={e => setMatchesTarget(Number(e.target.value))}
+                    >
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+                            <option key={d} value={d}>
+                                {localize('Digit')} {d}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='even-odd-panels'>
+                    <div className={classNames('even-odd-panel', { 'even-odd-panel--active': matches >= 10 })}>
+                        <Text size='s' weight='bold'>
+                            {localize('Matches')} {matches_digit}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {matches.toFixed(1)}%
+                        </Text>
+                    </div>
+                    <div className='even-odd-panel even-odd-panel--active'>
+                        <Text size='s' weight='bold'>
+                            {localize('Differs')} {matches_digit}
+                        </Text>
+                        <Text size='xs' color='less-prominent'>
+                            {differs.toFixed(1)}%
+                        </Text>
+                    </div>
                 </div>
             </div>
         </div>

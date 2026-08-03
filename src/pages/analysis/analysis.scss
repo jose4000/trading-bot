@@ -191,3 +191,28 @@
         border-color: #4a90ff;
     }
 }
+
+.strategy-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__title {
+        margin-top: 4px;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+    }
+
+    &__barrier-select {
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-normal, #ccc);
+        background: #fff;
+        font-size: 12px;
+    }
+}
