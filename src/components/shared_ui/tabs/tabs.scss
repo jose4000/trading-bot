@@ -167,4 +167,22 @@
             width: var(--tab-width);
         }
     }
+
+    &__content {
+        // Add these styles
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0; // CRITICAL: allows children to scroll
+        overflow: hidden; // Prevents content from overflowing the container
+        
+        // If you want to target the specific tab content
+        &-main__tabs {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+    }
+
+
 }
