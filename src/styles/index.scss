@@ -1,6 +1,39 @@
 @use 'components/shared/styles/themes' as *;
 // Removed IBM Plex Sans Google Font import - now using brand font from brand.config.json
 // Third-party developers can add their own font imports if needed
+// 👇 ADD THIS SECTION AT THE VERY TOP
+// Force html and body to fill the viewport and prevent page scrolling
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+// If you have a root container
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
+// Force the tabs container to fill the space
+.dc-tabs {
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+.dc-tabs__content,
+.dc-tabs__content-main__tabs {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    flex: 1 !important;
+}
+
+// Removed IBM Plex Sans Google Font import - now using brand font from brand.config.json
+// Third-party developers can add their own font imports if needed
 
 body {
     // Updated to use brand font variable from brand.config.json

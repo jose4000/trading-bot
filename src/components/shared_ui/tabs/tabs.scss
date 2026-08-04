@@ -3,9 +3,13 @@
 .dc-tabs {
     position: relative;
     display: grid;
+    height: 100%;
+    max-height: 100%;
 
     &--top {
         grid-template-rows: auto 1fr;
+        height: 100%;
+        max-height: 100%;
     }
 
     &--100vw {

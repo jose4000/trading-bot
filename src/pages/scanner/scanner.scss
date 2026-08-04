@@ -1,32 +1,14 @@
-.dc-tabs__content {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    flex: 1 !important;
-}
-
-// Also target the specific class if it exists
-.dc-tabs__content-main__tabs {
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    overflow: hidden !important;
-    flex: 1 !important;
-}
-
-
 .tab__scanner {
     padding: 20px 24px 32px;
     max-width: 1200px;
     margin: 0 auto;
     flex: 1;
     min-height: 0;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    
 
     &__header {
         margin-bottom: 20px;
