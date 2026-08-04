@@ -4,6 +4,7 @@
     margin: 0 auto;
     height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
     &__header {
