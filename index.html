@@ -112,6 +112,32 @@
     .voltra-wordmark__accent {
         color: #4caf50;
     }
+
+     #risk-disclaimer {
+        position: fixed;
+        bottom: 6rem;
+        left: 0;
+        right: 0;
+        z-index: 7; /* below splash (99999) but above normal content */
+        background: #1a1a1a;
+        color: #ccc;
+        font-size: 11px;
+        text-align: center;
+        padding: 6px 12px;
+        line-height: 1.4;
+        border-top: 1px solid #333;
+    }
+
+    #risk-disclaimer a {
+        color: #4caf50;
+        text-decoration: underline;
+    }
+    /* iOS safe-area handling, matching the pattern used by .control__section */
+    @supports (-webkit-touch-callout: none) {
+        #risk-disclaimer {
+            padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0));
+        }
+    }
 </style>
     </head>
 
@@ -145,6 +171,12 @@
     </div>
     <div class="voltra-wordmark">VOL<span class="voltra-wordmark__accent">TRA</span></div>
 </div>
+
+<div id="risk-disclaimer">
+    Trading involves significant risk of loss and may not be suitable for all investors. Past performance does not guarantee future results.
+</div>
+
+
         <!-- LiveChat script -->
         <script type="text/javascript" defer>
             window.__lc = window.__lc || {};
