@@ -64,8 +64,23 @@ export type TSymbolAnalysis = {
     symbol: string;
     tick_count: number;
     frequency: TFrequencyResult;
+    patterns: TPatternResult;
     streaks: TStreakResult;
     missing_digits: TMissingDigitEntry[];
     pressure: TPressureResult;
     signals: TSignal[];
 };
+
+export type TPatternOutcome = {
+    category: 'even' | 'odd' | 'over' | 'under' | 'digit';
+    label: string;
+    count: number;
+    pct: number;
+};
+
+export type TPatternResult = {
+    current_pattern: string; // e.g. "4-6-2"
+    occurrences: number; // how many times this EXACT 3-DIGIT pattern
+    best_outcome: TPatternOutcome | null; // the most likely outcome after this pattern
+    is_significant: boolean; // whether this pattern is significant enough to consider
+}

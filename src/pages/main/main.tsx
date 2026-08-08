@@ -48,6 +48,7 @@ const Tutorial = lazy(() => import('../tutorials'));
 const Scanner = lazy(() => import('../scanner'));
 const Analysis = lazy(() => import('../analysis'));
 const TradingBots = lazy(() => import('../trading-bots'));
+const PatternWatch = lazy(() => import('../pattern-watch'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -80,7 +81,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -509,6 +510,26 @@ const AppWrapper = observer(() => {
                                     fallback={<ChunkLoader message={localize('Please wait, loading bots...')} />}
                                 >
                                     <TradingBots />
+                                </Suspense>
+                            </div>
+
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Pattern Watch' />
+                                    </>
+                                }
+                                id='id-pattern-watch'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading patterns...')} />}
+                                >
+                                    <PatternWatch />
                                 </Suspense>
                             </div>
                         </Tabs>

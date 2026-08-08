@@ -3,6 +3,7 @@ import { api_base } from '@/external/bot-skeleton';
 import { TickCollector } from './TickCollector';
 import { FrequencyScanner } from './scanners/FrequencyScanner';
 import { TSymbolAnalysis, TTick, VOLATILITY_SYMBOLS } from './types';
+import { PatternScanner } from './scanners/PatternScanner';
 
 /**
  * Orchestrator: receives every incoming tick, feeds it to TickCollector,
@@ -15,6 +16,7 @@ class ScannerEngine {
     analysis: Record<string, TSymbolAnalysis> = {};
 
     private tick_collector: TickCollector;
+    private pattern_scanner: PatternScanner;
     private frequency_scanner: FrequencyScanner;
     private message_subscription: { unsubscribe: () => void } | null = null;
 
@@ -29,6 +31,7 @@ class ScannerEngine {
         } as any);
 
         this.tick_collector = new TickCollector(1000);
+        this.pattern_scanner = new PatternScanner();
         this.frequency_scanner = new FrequencyScanner();
 
         VOLATILITY_SYMBOLS.forEach(symbol => {
@@ -46,6 +49,12 @@ class ScannerEngine {
                 second_highest: 0,
                 lowest: 0,
                 second_lowest: 0,
+            },
+            patterns: {
+                current_pattern: '',
+                occurrences: 0,
+                best_outcome: null,
+                is_significant: false,
             },
             streaks: {
                 current_digit: null,
@@ -91,6 +100,7 @@ class ScannerEngine {
         const last_tick = this.tick_collector.getLastTick(symbol);
 
         const frequency = this.frequency_scanner.analyze(digits);
+        const patterns = this.pattern_scanner.analyze(digits);
 
         // Streak/Missing/Pressure/Pattern/Transition/Signal scanners plug in here
         // as they're built — for now, only frequency + tick_count + last digit are live.
@@ -98,6 +108,7 @@ class ScannerEngine {
             ...this.analysis[symbol],
             tick_count: digits.length,
             frequency,
+            patterns,
             streaks: {
                 ...this.analysis[symbol].streaks,
                 current_digit: last_tick?.digit ?? null,
