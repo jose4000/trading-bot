@@ -368,7 +368,13 @@ const AppWrapper = observer(() => {
     // [/AI]
     return (
         <React.Fragment>
-            <div className='main'>
+            <div className={classNames('main', {
+                'main--scrollable-tabs':
+                  active_tab === DBOT_TABS.SCANNER ||
+                  active_tab === DBOT_TABS.ANALYSIS ||
+                  active_tab === DBOT_TABS.TRADING_BOTS ||
+                  active_tab === DBOT_TABS.PATTERN_WATCH,
+            })}>
                 <div
                     className={classNames('main__container', {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
