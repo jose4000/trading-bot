@@ -40,8 +40,8 @@
             padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid var(--border-normal, #333);
-            background: var(--background-secondary, #1a1a1a);
-            color: var(--text-general, #fff);
+            background: var(--background-secondary, #F8F9FA);
+            color: var(--text-general, #212529);
         }
     }
 }
@@ -189,7 +189,7 @@
     text-align: center;
     padding: 20px;
     border-radius: 8px;
-    background: var(--background-secondary, #1a1a1a);
+    background: var(--background-secondary, #F8F9FA);
     border: 1px solid var(--border-normal, #333);
 
     &--active {
