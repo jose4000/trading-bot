@@ -14,6 +14,7 @@ import { AppLogo } from '../app-logo';
 import AccountSwitcher from './account-switcher';
 import MenuItems from './menu-items';
 import MobileMenu from './mobile-menu';
+import ChangeTheme from '../footer/ChangeTheme';
 import './header.scss';
 
 const AppHeader = observer(() => {
@@ -238,7 +239,9 @@ const AppHeader = observer(() => {
                     <AppLogo />
                     {isDesktop ? <MenuItems /> : renderAccountSection('left')}
                 </Wrapper>
-                <Wrapper variant='right'>{renderAccountSection('right')}</Wrapper>
+                <Wrapper variant='right'>
+                    <ChangeTheme />
+                    {renderAccountSection('right')}</Wrapper>
             </Header>
         </>
     );
