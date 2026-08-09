@@ -1,4 +1,5 @@
 import { api_base } from '@/external/bot-skeleton';
+import { doUntilDone } from '@/external/bot-skeleton/services/tradeEngine/utils/helpers';
 
 export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF';
 
@@ -8,8 +9,8 @@ export type TProposalParams = {
     contract_type: TDigitContractType;
     symbol: string;
     duration: number;
-    duration_unit: 't'; // ticks — standard for digit contracts
-    barrier?: string; // required for OVER/UNDER/MATCH/DIFF, the target digit 0-9
+    duration_unit: 't';
+    barrier?: string;
 };
 
 export type TProposalResult = {
@@ -40,14 +41,14 @@ class ManualTradeService {
             currency: params.currency,
             duration: params.duration,
             duration_unit: params.duration_unit,
-            symbol: params.symbol,
+            underlying_symbol: params.symbol, // ← fixed field name
         };
 
         if (params.barrier !== undefined) {
             request.barrier = params.barrier;
         }
 
-        const response = await api_base.api.send(request);
+        const response = await doUntilDone(() => api_base.api?.send(request), [], api_base);
 
         if (response?.error) {
             throw new Error(response.error.message || 'Failed to get proposal');
@@ -68,10 +69,11 @@ class ManualTradeService {
     async buyContract(proposal_id: string, price: number): Promise<TBuyResult> {
         if (!api_base.api) throw new Error('No active API connection');
 
-        const response = await api_base.api.send({
-            buy: proposal_id,
-            price,
-        });
+        const response = await doUntilDone(
+            () => api_base.api?.send({ buy: proposal_id, price }),
+            [],
+            api_base
+        );
 
         if (response?.error) {
             throw new Error(response.error.message || 'Failed to place trade');
