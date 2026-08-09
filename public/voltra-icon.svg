@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="voltra-bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1b5e20"/>
+            <stop offset="100%" stop-color="#0a0a0f"/>
+        </linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="16" fill="url(#voltra-bg)"/>
+
+    <circle cx="32" cy="32" r="19" fill="none" stroke="#4caf50" stroke-width="2" opacity="0.35"/>
+
+    <path d="M18 38 L27 26 L33 33 L46 18" fill="none" stroke="#4caf50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <circle cx="46" cy="18" r="3.5" fill="#4caf50"/>
+</svg>
