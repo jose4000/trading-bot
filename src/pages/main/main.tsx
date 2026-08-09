@@ -49,6 +49,7 @@ const Scanner = lazy(() => import('../scanner'));
 const Analysis = lazy(() => import('../analysis'));
 const TradingBots = lazy(() => import('../trading-bots'));
 const PatternWatch = lazy(() => import('../pattern-watch'));
+const ManualTrader = lazy(() => import('../manual-trader'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -81,7 +82,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -373,7 +374,8 @@ const AppWrapper = observer(() => {
                   active_tab === DBOT_TABS.SCANNER ||
                   active_tab === DBOT_TABS.ANALYSIS ||
                   active_tab === DBOT_TABS.TRADING_BOTS ||
-                  active_tab === DBOT_TABS.PATTERN_WATCH,
+                  active_tab === DBOT_TABS.PATTERN_WATCH ||
+                  active_tab === DBOT_TABS.MANUAL_TRADER,
             })}>
                 <div
                     className={classNames('main__container', {
