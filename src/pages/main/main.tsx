@@ -540,6 +540,26 @@ const AppWrapper = observer(() => {
                                     <PatternWatch />
                                 </Suspense>
                             </div>
+
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Manual Trader' />
+                                    </>
+                                }
+                                id='id-manual-trader'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading manual trader...')} />}
+                                >
+                                    <ManualTrader />
+                                </Suspense>
+                            </div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
