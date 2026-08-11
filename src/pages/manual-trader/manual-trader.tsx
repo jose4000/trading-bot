@@ -14,6 +14,7 @@ import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import './manual-trader.scss';
 
+
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     R_10: 'Volatility 10 Index',
     R_25: 'Volatility 25 Index',
@@ -30,8 +31,11 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
 type TCategory = 'even_odd' | 'over_under' | 'matches_differs';
 
 const ManualTraderComponent = observer(() => {
-    const { client } = useStore();
+
+    const { client, scanner } = useStore();
     const { isDesktop } = useDevice();
+    
+   const [digit_history, setDigitHistory] = React.useState<number[]>([]);
 
     const [category, setCategory] = React.useState<TCategory>('even_odd');
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
@@ -92,6 +96,16 @@ const ManualTraderComponent = observer(() => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [category, symbol, stake, duration, direction, barrier_digit, client?.currency]);
 
+    React.useEffect(() => {
+    scanner.startScanning();
+    const interval = setInterval(() => {
+        setDigitHistory(scanner.getDigitHistory(symbol, 20));
+    }, 500);
+    return () => {
+        clearInterval(interval);
+    };
+}, [scanner, symbol]);
+
     const handleBuyClick = () => {
         if (!proposal) return;
         setBuyResult(null);
@@ -136,7 +150,32 @@ const ManualTraderComponent = observer(() => {
                             </option>
                         ))}
                     </select>
+
                 </div>
+
+                <div className='digit-trend'>
+    <label>{localize('Recent Digit Trend')}</label>
+    <div className='digit-trend__strip'>
+        {digit_history.length === 0 && (
+            <span className='digit-trend__empty'>{localize('Collecting data...')}</span>
+        )}
+        {digit_history.map((digit, index) => {
+            const is_even = digit % 2 === 0;
+            return (
+                <span
+                    key={index}
+                    className={classNames('digit-trend__item', {
+                        'digit-trend__item--even': is_even,
+                        'digit-trend__item--odd': !is_even,
+                    })}
+                >
+                    {is_even ? localize('Even') : localize('Odd')}
+                </span>
+            );
+        })}
+    </div>
+</div>
+
 
                 <div className='trade-form__row'>
                     <label>{localize('Contract Category')}</label>

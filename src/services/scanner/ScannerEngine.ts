@@ -139,6 +139,12 @@ class ScannerEngine {
     };
 
     getAnalysis = (symbol: string): TSymbolAnalysis => this.analysis[symbol] ?? this.buildEmptyAnalysis(symbol);
+
+
+    getDigitHistory = (symbol: string, count = 20): number[] => {
+        const digits = this.tick_collector.getDigits(symbol);
+        return digits.slice(-count);
+    }
 }
 
 export const scanner_engine = new ScannerEngine();
