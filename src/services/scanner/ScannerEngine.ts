@@ -116,6 +116,39 @@ class ScannerEngine {
         };
     };
 
+    private async fetchHistoricalTicks(symbol: string): Promise<void> {
+        if (!api_base.api) return;
+
+        try {
+            const response = await api_base.api.send({
+                ticks_history: symbol,
+                count: this.tick_collector.getWindowSize(),
+                end: 'latest',
+                style: 'ticks'
+            });
+
+            if (response?.error || !response?.history) return;
+
+            const { prices, times } = response.history;
+            if (!Array.isArray(prices) || !Array.isArray(times)) return;
+
+            const ticks: TTick[] = prices.map((price: number, index: number) => {
+                const quote = Number(price);
+                return {
+                    symbol,
+                    quote,
+                    digit: this.extractDigit(quote, symbol),
+                    epoch: times[index],
+                };
+            });
+
+            this.tick_collector.seed(symbol, ticks);
+            this.private_updateAnalysis(symbol);
+        } catch {
+            // Silently skip - lice ticks will still populate data going forward
+        }
+    }
+
     start = () => {
         if (this.is_running || !api_base.api) return;
         this.is_running = true;
@@ -127,6 +160,7 @@ class ScannerEngine {
         });
 
         VOLATILITY_SYMBOLS.forEach(symbol => {
+            this.fetchHistoricalTicks(symbol)
             api_base.api?.send({ ticks: symbol, subscribe: 1 });
         });
     };

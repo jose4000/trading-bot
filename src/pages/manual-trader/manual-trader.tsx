@@ -36,6 +36,7 @@ const ManualTraderComponent = observer(() => {
     const { isDesktop } = useDevice();
     
    const [digit_history, setDigitHistory] = React.useState<number[]>([]);
+   const [tick_lookahead, setTickLookahead] = React.useState(5);
 
     const [category, setCategory] = React.useState<TCategory>('even_odd');
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
@@ -60,6 +61,11 @@ const ManualTraderComponent = observer(() => {
     };
 
     const needsBarrier = category === 'over_under' || category === 'matches_differs';
+
+    const even_count = digit_history.filter(d => d % 2 === 0).length;
+    const odd_count = digit_history.length - even_count;
+    const even_pct = digit_history.length > 0 ? (even_count / digit_history.length) * 100 : 0;
+    const odd_pct = 100 - even_pct;
 
     // Fetch a fresh proposal whenever trade parameters change
     React.useEffect(() => {
@@ -99,12 +105,12 @@ const ManualTraderComponent = observer(() => {
     React.useEffect(() => {
     scanner.startScanning();
     const interval = setInterval(() => {
-        setDigitHistory(scanner.getDigitHistory(symbol, 20));
+        setDigitHistory(scanner.getDigitHistory(symbol, tick_lookahead));
     }, 500);
     return () => {
         clearInterval(interval);
     };
-}, [scanner, symbol]);
+}, [scanner, symbol, tick_lookahead]);
 
     const handleBuyClick = () => {
         if (!proposal) return;
@@ -154,15 +160,15 @@ const ManualTraderComponent = observer(() => {
                 </div>
 
                 <div className='digit-trend'>
-    <label>{localize('Recent Digit Trend')}</label>
-    <div className='digit-trend__strip'>
-        {digit_history.length === 0 && (
-            <span className='digit-trend__empty'>{localize('Collecting data...')}</span>
-        )}
-        {digit_history.map((digit, index) => {
-            const is_even = digit % 2 === 0;
-            return (
-                <span
+              <label>{localize('Recent Digit Trend')}</label>
+                <div className='digit-trend__strip'>
+               {digit_history.length === 0 && (
+                   <span className='digit-trend__empty'>{localize('Collecting data...')}</span>
+               )}
+                 {digit_history.map((digit, index) => {
+                 const is_even = digit % 2 === 0;
+                 return (
+                  <span
                     key={index}
                     className={classNames('digit-trend__item', {
                         'digit-trend__item--even': is_even,
@@ -175,6 +181,49 @@ const ManualTraderComponent = observer(() => {
         })}
     </div>
 </div>
+   <div className='bias-context'>
+      <div className='bias-context_header'>
+        <label>
+            {localize('Session Even/Odd Bias')}
+        </label>
+        <select value={tick_lookahead} onChange={e => setTickLookahead(Number(e.target.value))}>
+            {[5, 10, 20] .map(n => (
+                <option key={n} value={n}>
+                    {localize('Last')} {n} {localize('ticks')}
+                </option>
+            ))}
+        </select>
+       </div>
+
+      <div className='bias-context_bars'>
+        <div className='bias-context_bar'>
+            <span className='bias-context_label bias-context_label--even'>{localize('Even')}</span>
+           <div className='bias-context_track'>
+            <div className='bias-context_fill bias-context_fill--even' style={{ width: `${even_pct}%` }} />
+           </div>
+
+           <span className='bias-context_pct'>{even_pct.toFixed(0)}%</span>
+        </div>
+
+        <div className='bias-context_bar'>
+            <span className='bias-context_label bias-context_label--odd'>{localize('Odd')}</span>
+            <div className='bias-context_track'>
+                <div className='bias-context_fill bias-context_fill--odd' style={{ width: `${odd_pct}%`}} />
+            </div>
+            
+            <span className='bias-content_pct'>{odd_pct.toFixed(0)}%</span>
+        </div>
+
+        </div>
+
+        <Text size='xxxs' color='less-prominent' className='bias-context_disclaimer'>
+            {localize('This reflects what already happened in the recent session - each tick is independent, so this is not a prediction of future outrcomes')}
+        </Text>
+    </div>
+
+
+
+
 
 
                 <div className='trade-form__row'>

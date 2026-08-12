@@ -54,4 +54,9 @@ export class TickCollector {
             this.history = {};
         }
     }
+
+    seed(symbol: string, ticks: TTick[]) {
+        const trimmed = ticks.slice(-this.window_size);
+        this.history[symbol] = trimmed;
+    }
 }
