@@ -50,6 +50,7 @@ const Analysis = lazy(() => import('../analysis'));
 const TradingBots = lazy(() => import('../trading-bots'));
 const PatternWatch = lazy(() => import('../pattern-watch'));
 const ManualTrader = lazy(() => import('../manual-trader'));
+const CopyTrading = lazy(() => import('../copy-trading'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -82,7 +83,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -375,7 +376,8 @@ const AppWrapper = observer(() => {
                   active_tab === DBOT_TABS.ANALYSIS ||
                   active_tab === DBOT_TABS.TRADING_BOTS ||
                   active_tab === DBOT_TABS.PATTERN_WATCH ||
-                  active_tab === DBOT_TABS.MANUAL_TRADER,
+                  active_tab === DBOT_TABS.MANUAL_TRADER ||
+                  active_tab === DBOT_TABS.COPY_TRADING,
             })}>
                 <div
                     className={classNames('main__container', {
@@ -558,6 +560,26 @@ const AppWrapper = observer(() => {
                                     fallback={<ChunkLoader message={localize('Please wait, loading manual trader...')} />}
                                 >
                                     <ManualTrader />
+                                </Suspense>
+                            </div>
+
+                             <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Copy Trading' />
+                                    </>
+                                }
+                                id='id-copy-trading'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading copy trading...')} />}
+                                >
+                                    <CopyTrading />
                                 </Suspense>
                             </div>
                         </Tabs>
