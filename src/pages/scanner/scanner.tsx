@@ -57,6 +57,15 @@ const ScannerComponent = observer(() => {
         <div className='tab__scanner'>
             <div className='tab__scanner__header'>
                 <div className='tab__scanner__title-row'>
+                    <div className='radar-icon'>
+                            <svg viewBox='0 0 40 40'>
+                                <circle cx='20' cy='20' r='18' className='radar-icon__ring radar-icon__ring--1' />
+                                <circle cx='20' cy='20' r='18' className='radar-icon__ring radar-icon__ring--2' />
+                                <circle cx='20' cy='20' r='18' className='radar-icon__ring radar-icon__ring--3' />
+                                <line x1='20' y1='20' x2='20' y2='4' className='radar-icon__sweep' />
+                                <circle cx='20' cy='20' r='2.5' className='radar-icon__dot' />
+                            </svg>
+                     </div>
                     <Text as='h2' color='prominent' size={isDesktop ? 'sm' : 's'} lineHeight='xxl' weight='bold'>
                         {localize('Market Scanner')}
                     </Text>
@@ -122,7 +131,7 @@ const ScannerComponent = observer(() => {
                 {rankings.map((rec, index) => {
                     const tier = getScoreTier(rec.score);
                     return (
-                        <div className={classNames('ranking-card', `ranking-card--${tier}`)} key={rec.symbol}>
+                        <div className={classNames('ranking-card', `ranking-card--${tier}`)} key={rec.symbol} style={{ animationDelay: `${index * 60}ms` }}>
                             <div className='ranking-card__rank'>{index + 1}</div>
 
                             <div className='ranking-card__body'>
