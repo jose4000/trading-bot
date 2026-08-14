@@ -1,7 +1,7 @@
 import { api_base } from '@/external/bot-skeleton';
 import { doUntilDone } from '@/external/bot-skeleton/services/tradeEngine/utils/helpers';
 
-export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF';
+export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF' | 'CALL' | 'PUT';
 
 export type TProposalParams = {
     amount: number;

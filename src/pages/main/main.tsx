@@ -51,6 +51,8 @@ const TradingBots = lazy(() => import('../trading-bots'));
 const PatternWatch = lazy(() => import('../pattern-watch'));
 const ManualTrader = lazy(() => import('../manual-trader'));
 const CopyTrading = lazy(() => import('../copy-trading'));
+const RiskCalculator = lazy(() => import('../risk-calculator'));
+const BulkTrader = lazy(() => import('../bulk-trader'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -83,7 +85,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading', 'risk_calculator', 'bulk-trader'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -377,7 +379,9 @@ const AppWrapper = observer(() => {
                   active_tab === DBOT_TABS.TRADING_BOTS ||
                   active_tab === DBOT_TABS.PATTERN_WATCH ||
                   active_tab === DBOT_TABS.MANUAL_TRADER ||
-                  active_tab === DBOT_TABS.COPY_TRADING,
+                  active_tab === DBOT_TABS.COPY_TRADING ||
+                  active_tab === DBOT_TABS.RISK_CALCULATOR ||
+                   active_tab === DBOT_TABS.BULK_TRADER,
             })}>
                 <div
                     className={classNames('main__container', {
@@ -580,6 +584,46 @@ const AppWrapper = observer(() => {
                                     fallback={<ChunkLoader message={localize('Please wait, loading copy trading...')} />}
                                 >
                                     <CopyTrading />
+                                </Suspense>
+                            </div>
+
+                             <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Risk Calculator' />
+                                    </>
+                                }
+                                id='id-risk-calculator'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading risk calculator...')} />}
+                                >
+                                    <RiskCalculator/>
+                                </Suspense>
+                            </div>
+
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Risk Calculator' />
+                                    </>
+                                }
+                                id='id-bulk-trader'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading bulk trader...')} />}
+                                >
+                                    <BulkTrader/>
                                 </Suspense>
                             </div>
                         </Tabs>

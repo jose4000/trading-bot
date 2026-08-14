@@ -1,0 +1,195 @@
+.tab__bulk-trader {
+    padding: 20px 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    &__header {
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        padding-bottom: 160px;
+    }
+}
+
+.subtitle {
+    margin-top: 4px;
+    color: #666;
+}
+
+.common-stake-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    &__input {
+        width: 80px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+}
+
+.trade-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.trade-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    flex-wrap: wrap;
+
+    &__index {
+        width: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #999;
+    }
+
+    select,
+    input {
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+    }
+
+    &__stake,
+    &__duration {
+        width: 60px;
+    }
+
+    &__remove {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #c62828;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    &__status {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 8px;
+
+        &--pending {
+            background: rgba(255, 193, 7, 0.15);
+            color: #a56e00;
+        }
+
+        &--success {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2e7d32;
+        }
+
+        &--failed {
+            background: rgba(198, 40, 40, 0.15);
+            color: #c62828;
+        }
+    }
+}
+
+.execute-summary {
+    display: flex;
+    gap: 24px;
+    margin: 16px 0;
+    font-size: 14px;
+}
+
+.execute-button {
+    width: 100%;
+}
+
+.results-summary {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f5f5;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.confirm-modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 420px;
+    width: 100%;
+
+    &__warning {
+        display: block;
+        margin: 12px 0 20px;
+        line-height: 1.5;
+    }
+
+    &__actions {
+        display: flex;
+        gap: 12px;
+
+        button {
+            flex: 1;
+        }
+    }
+}
+
+body.theme--dark {
+    .subtitle {
+        color: #999;
+    }
+
+    .trade-row {
+        background: #1a1a1a;
+        border-color: #333;
+
+        select,
+        input {
+            background: #262626;
+            border-color: #444;
+            color: #fff;
+        }
+    }
+
+    .results-summary {
+        background: #1a1a1a;
+        color: #fff;
+    }
+
+    .confirm-modal {
+        background: #1a1a1a;
+        color: #fff;
+    }
+}
