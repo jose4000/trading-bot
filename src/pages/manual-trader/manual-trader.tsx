@@ -28,7 +28,7 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     '1HZ100V': 'Volatility 100 (1s) Index',
 };
 
-type TCategory = 'even_odd' | 'over_under' | 'matches_differs';
+type TCategory = 'even_odd' | 'over_under' | 'matches_differs' | 'rise_fall' | 'touch_no_touch';
 
 const ManualTraderComponent = observer(() => {
 
@@ -42,9 +42,10 @@ const ManualTraderComponent = observer(() => {
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [stake, setStake] = React.useState(10);
     const [duration, setDuration] = React.useState(5);
-    const [direction, setDirection] = React.useState<'even' | 'odd' | 'over' | 'under' | 'matches' | 'differs'>(
+    const [direction, setDirection] = React.useState<'even' | 'odd' | 'over' | 'under' | 'matches' | 'differs' | 'rise' | 'fall' | 'touch' | 'no_touch'>(
         'even'
     );
+    const [duration_unit, setDurationUnit] = React.useState<'t' | 'm'>('t');
     const [barrier_digit, setBarrierDigit] = React.useState(5);
 
     const [proposal, setProposal] = React.useState<TProposalResult | null>(null);
@@ -54,13 +55,17 @@ const ManualTraderComponent = observer(() => {
     const [is_buying, setIsBuying] = React.useState(false);
     const [buy_result, setBuyResult] = React.useState<{ success: boolean; message: string } | null>(null);
 
+    const [touch_barrier, setTouchBarrier] = React.useState('+10');
+
     const getContractType = (): TDigitContractType => {
         if (category === 'even_odd') return direction === 'even' ? 'DIGITEVEN' : 'DIGITODD';
         if (category === 'over_under') return direction === 'over' ? 'DIGITOVER' : 'DIGITUNDER';
-        return direction === 'matches' ? 'DIGITMATCH' : 'DIGITDIFF';
+        if (category === 'rise_fall') return direction === 'rise' ? 'CALL' : 'PUT';
+        if (category === 'matches_differs') return direction === 'matches' ? 'DIGITMATCH' : 'DIGITDIFF';
+        return direction === 'touch' ? 'ONETOUCH' : 'NOTOUCH';
     };
 
-    const needsBarrier = category === 'over_under' || category === 'matches_differs';
+    const needsBarrier = category === 'over_under' || category === 'matches_differs' || category === 'touch_no_touch';
 
     const even_count = digit_history.filter(d => d % 2 === 0).length;
     const odd_count = digit_history.length - even_count;
@@ -84,8 +89,8 @@ const ManualTraderComponent = observer(() => {
                     contract_type: getContractType(),
                     symbol,
                     duration,
-                    duration_unit: 't',
-                    barrier: needsBarrier ? String(barrier_digit) : undefined,
+                    duration_unit: duration_unit,
+                    barrier: needsBarrier ? (category === 'touch_no_touch' ? touch_barrier : String(barrier_digit)) : undefined,
                 });
                 if (!cancelled) setProposal(result);
             } catch (err: any) {
@@ -100,7 +105,7 @@ const ManualTraderComponent = observer(() => {
             clearTimeout(timer);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [category, symbol, stake, duration, direction, barrier_digit, client?.currency]);
+    }, [category, symbol, stake, duration, direction, barrier_digit, client?.currency, touch_barrier, duration_unit]);
 
     React.useEffect(() => {
     scanner.startScanning();
@@ -221,28 +226,25 @@ const ManualTraderComponent = observer(() => {
         </Text>
     </div>
 
-
-
-
-
-
-                <div className='trade-form__row'>
+<div className='trade-form__row'>
                     <label>{localize('Contract Category')}</label>
                     <div className='category-tabs'>
-                        {(['even_odd', 'over_under', 'matches_differs'] as TCategory[]).map(cat => (
+                        {(['even_odd', 'over_under', 'matches_differs', 'rise_fall', 'touch_no_touch'] as TCategory[]).map(cat => (
                             <button
                                 key={cat}
                                 className={classNames('category-tabs__item', { active: category === cat })}
                                 onClick={() => {
                                     setCategory(cat);
                                     setDirection(
-                                        cat === 'even_odd' ? 'even' : cat === 'over_under' ? 'over' : 'matches'
+                                        cat === 'even_odd' ? 'even' : cat === 'over_under' ? 'over' : cat === 'matches_differs' ? 'matches' : cat === 'rise_fall' ? 'rise' : 'touch'
                                     );
                                 }}
                             >
                                 {cat === 'even_odd' && localize('Even/Odd')}
                                 {cat === 'over_under' && localize('Over/Under')}
                                 {cat === 'matches_differs' && localize('Matches/Differs')}
+                                {cat === 'rise_fall' && localize('Rise/Fall')}
+                                {cat === 'touch_no_touch' && localize('Touch/No Touch')}
                             </button>
                         ))}
                     </div>
@@ -299,10 +301,37 @@ const ManualTraderComponent = observer(() => {
                                 </button>
                             </>
                         )}
+
+                        {category === 'rise_fall' && (
+                          <>
+                                <button className={classNames({ active: direction === 'rise' })} onClick={() => setDirection('rise')}>
+                                    {localize('Rise')}
+                                </button>
+                                <button className={classNames({ active: direction === 'fall' })} onClick={() => setDirection('fall')}>
+                                    {localize('Fall')}
+                                </button>
+                            </>
+                        )}
+
+                    
+                    {category === 'touch_no_touch' && (
+                        <>
+                            <button className={classNames({ active: direction === 'touch' })} onClick={() => setDirection('touch')}>
+                                {localize('Touch')}
+                            </button>
+                            <button
+                                className={classNames({ active: direction === 'no_touch' })}
+                                onClick={() => setDirection('no_touch')}
+                            >
+                                {localize('No Touch')}
+                            </button>
+                        </>
+                    )}
+
                     </div>
                 </div>
 
-                {needsBarrier && (
+                {needsBarrier &&  category !== 'touch_no_touch' && (
                     <div className='trade-form__row'>
                         <label>{localize('Barrier Digit')}</label>
                         <select value={barrier_digit} onChange={e => setBarrierDigit(Number(e.target.value))}>
@@ -315,7 +344,32 @@ const ManualTraderComponent = observer(() => {
                     </div>
                 )}
 
-                <div className='trade-form__row trade-form__row--split'>
+                                    {category === 'touch_no_touch' && (
+                        <div className='trade-form__row'>
+                            <label>{localize('Barrier Offset (e.g. +10 or -10)')}</label>
+                            <input
+                                type='text'
+                                value={touch_barrier}
+                                onChange={e => setTouchBarrier(e.target.value)}
+                                placeholder='+10'
+                            />
+                        </div>
+                        )}
+                        <div className='trade-form__row'>
+                            <label>{localize('Duration Unit')}</label>
+                            <div className='direction-toggle'>
+                                <button className={classNames({ active: duration_unit === 't' })} onClick={() => setDurationUnit('t')}>
+                                    {localize('Ticks')}
+                                </button>
+                                <button className={classNames({ active: duration_unit === 'm' })} onClick={() => setDurationUnit('m')}>
+                                    {localize('Minutes')}
+                                </button>
+                            </div>
+                        </div>
+
+
+
+<div className='trade-form__row trade-form__row--split'>
                     <div>
                         <label>{localize('Stake')} ({client?.currency ?? '—'})</label>
                         <input

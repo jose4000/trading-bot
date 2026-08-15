@@ -1,15 +1,16 @@
 import { api_base } from '@/external/bot-skeleton';
 import { doUntilDone } from '@/external/bot-skeleton/services/tradeEngine/utils/helpers';
 
-export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF' | 'CALL' | 'PUT';
+export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF' | 'CALL' | 'PUT' | 'ONETOUCH' | 'NOTOUCH';
 
+export type TDurationUnit = 't' | 'm' | 'h'; // ticks, minutes, hours
 export type TProposalParams = {
     amount: number;
     currency: string;
     contract_type: TDigitContractType;
     symbol: string;
     duration: number;
-    duration_unit: 't';
+    duration_unit: TDurationUnit;
     barrier?: string;
 };
 
