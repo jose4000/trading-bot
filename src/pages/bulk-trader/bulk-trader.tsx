@@ -55,6 +55,7 @@ const BulkTraderComponent = observer(() => {
     const [use_common_stake, setUseCommonStake] = React.useState(false);
     const [common_stake, setCommonStake] = React.useState(10);
     const [results, setResults] = React.useState<Record<string, TBulkTradeResult>>({});
+    const [is_guide_open, setIsGuideOpen] = React.useState(true);
     const [is_executing, setIsExecuting] = React.useState(false);
     const [is_confirm_open, setIsConfirmOpen] = React.useState(false);
 
@@ -104,7 +105,39 @@ const BulkTraderComponent = observer(() => {
                 </Text>
             </div>
 
-            <div className='common-stake-toggle'>
+           <div className='guide-box'>
+    <button className='guide-box__toggle' onClick={() => setIsGuideOpen(!is_guide_open)}>
+        <span>💡 {localize('How Bulk Trader Works')}</span>
+        <span className={classNames('guide-box__chevron', { 'guide-box__chevron--open': is_guide_open })}>▾</span>
+    </button>
+    {is_guide_open && (
+        <ol className='guide-box__steps'>
+            <li>
+                <strong>{localize('Add trades')}</strong> —{' '}
+                {localize('each row below is one trade. Click "+ Add Trade" to queue more.')}
+            </li>
+            <li>
+                <strong>{localize('Set up each row')}</strong> —{' '}
+                {localize('pick market, contract type, barrier (if needed), stake, and duration.')}
+            </li>
+            <li>
+                <strong>{localize('Optional: one shared stake')}</strong> —{' '}
+                {localize('check the box above to use the same stake for every trade instead.')}
+            </li>
+            <li>
+                <strong>{localize('Execute')}</strong> —{' '}
+                {localize('click "Execute All Trades", review the total, then confirm.')}
+            </li>
+            <li>
+                <strong>{localize('Trades run one at a time')}</strong> —{' '}
+                {localize('not simultaneously. Watch each row\u2019s status: pending → success or failed.')}
+            </li>
+        </ol>
+    )}
+</div> 
+
+
+<div className='common-stake-toggle'>
                 <label>
                     <input
                         type='checkbox'
