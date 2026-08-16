@@ -5,8 +5,11 @@ import Text from '@/components/shared_ui/text';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
+import { auto_trader_service, TAutoTradeCategory } from '@/services/auto-trader/auto-trader-service';
+import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import { rankMarkets } from '@/services/scanner/scanners/RecommendationEngine';
 import './scanner.scss';
+import Button from '@/components/shared_ui/button';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     R_10: 'Volatility 10 Index',
@@ -43,11 +46,44 @@ function getScoreTier(score: number): 'strong' | 'moderate' | 'weak' {
 const ScannerComponent = observer(() => {
     const { scanner } = useStore();
     const { isDesktop } = useDevice();
+    const { client } = useStore();
 
     React.useEffect(() => {
         scanner.startScanning();
         return () => scanner.stopScanning();
     }, [scanner]);
+
+    const [selected_symbols, setSelectedSymbols] = React.useState<string[]>([]);
+const [auto_category, setAutoCategory] = React.useState<TAutoTradeCategory>('even_odd');
+const [confidence_threshold, setConfidenceThreshold] = React.useState(60);
+const [auto_stake, setAutoStake] = React.useState(10);
+const [auto_duration, setAutoDuration] = React.useState(5);
+const [max_runs, setMaxRuns] = React.useState(10);
+const [is_confirm_auto_open, setIsConfirmAutoOpen] = React.useState(false);
+
+const toggleSymbol = (symbol: string) => {
+    setSelectedSymbols(prev => (prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol]));
+};
+
+const handleStartAutoClick = () => {
+    if (selected_symbols.length === 0) return;
+    setIsConfirmAutoOpen(true);
+};
+
+const handleConfirmStartAuto = () => {
+    auto_trader_service.start({
+        symbols: selected_symbols,
+        category: auto_category,
+        confidence_threshold,
+        stake: auto_stake,
+        duration: auto_duration,
+        currency: client?.currency ?? 'USD',
+        max_runs,
+        cooldown_ms: 5000,
+    });
+    setIsConfirmAutoOpen(false);
+};
+
 
     const rankings = rankMarkets(scanner.symbol_stats);
     const top_pick = rankings[0];
@@ -78,6 +114,136 @@ const ScannerComponent = observer(() => {
                     {localize('Scanning Volatility Indices for trading opportunities')}
                 </Text>
             </div>
+            
+            <div className='auto-trader-panel'>
+    <div className='auto-trader-panel__header'>
+        <Text as='h3' size='s' weight='bold'>
+            🤖 {localize('Auto Trader')}
+        </Text>
+        {auto_trader_service.is_running && (
+            <span className='auto-trader-panel__running-badge'>
+                {localize('Running')} — {auto_trader_service.runs_completed}/{auto_trader_service.max_runs}
+            </span>
+        )}
+    </div>
+
+    {!auto_trader_service.is_running ? (
+        <>
+            <div className='auto-trader-panel__row'>
+                <label>{localize('Watch these markets')}</label>
+                <div className='symbol-checkboxes'>
+                    {VOLATILITY_SYMBOLS.map(symbol => (
+                        <label key={symbol} className='symbol-checkboxes__item'>
+                            <input
+                                type='checkbox'
+                                checked={selected_symbols.includes(symbol)}
+                                onChange={() => toggleSymbol(symbol)}
+                            />
+                            {SYMBOL_DISPLAY_NAMES[symbol] ?? symbol}
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className='auto-trader-panel__row'>
+                <label>{localize('Contract Category')}</label>
+                <select value={auto_category} onChange={e => setAutoCategory(e.target.value as TAutoTradeCategory)}>
+                    <option value='even_odd'>{localize('Even/Odd')}</option>
+                    <option value='over_under'>{localize('Over/Under (barrier 5)')}</option>
+                    <option value='matches_differs'>{localize('Matches/Differs')}</option>
+                </select>
+            </div>
+
+            <div className='auto-trader-panel__row auto-trader-panel__row--split'>
+                <div>
+                    <label>{localize('Confidence Threshold (%)')}</label>
+                    <input
+                        type='number'
+                        min={50}
+                        max={95}
+                        value={confidence_threshold}
+                        onChange={e => setConfidenceThreshold(Number(e.target.value))}
+                    />
+                </div>
+                <div>
+                    <label>{localize('Number of Runs')}</label>
+                    <input
+                        type='number'
+                        min={1}
+                        max={50}
+                        value={max_runs}
+                        onChange={e => setMaxRuns(Number(e.target.value))}
+                    />
+                </div>
+            </div>
+
+            <div className='auto-trader-panel__row auto-trader-panel__row--split'>
+                <div>
+                    <label>{localize('Stake')} ({client?.currency ?? '—'})</label>
+                    <input type='number' min={0.35} value={auto_stake} onChange={e => setAutoStake(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label>{localize('Duration (ticks)')}</label>
+                    <input
+                        type='number'
+                        min={1}
+                        max={10}
+                        value={auto_duration}
+                        onChange={e => setAutoDuration(Number(e.target.value))}
+                    />
+                </div>
+            </div>
+
+            <Button
+                text={localize('Start Auto Trading')}
+                onClick={handleStartAutoClick}
+                disabled={selected_symbols.length === 0}
+                primary
+                large
+            />
+        </>
+    ) : (
+        <Button text={localize('Stop Auto Trading')} onClick={() => auto_trader_service.stop()} primary large className='auto-trader-panel__stop' />
+    )}
+
+    {auto_trader_service.log.length > 0 && (
+        <div className='auto-trade-log'>
+            <Text size='xxxs' weight='bold' color='less-prominent'>
+                {localize('Recent Trades')}
+            </Text>
+            {auto_trader_service.log.map(entry => (
+                <div
+                    key={entry.id}
+                    className={classNames('auto-trade-log__row', `auto-trade-log__row--${entry.status}`)}
+                >
+                    <span>{SYMBOL_DISPLAY_NAMES[entry.symbol] ?? entry.symbol}</span>
+                    <span>{entry.contract_type}{entry.barrier ? ` (${entry.barrier})` : ''}</span>
+                    <span>{entry.status === 'success' ? `#${entry.contract_id}` : entry.error}</span>
+                </div>
+            ))}
+        </div>
+    )}
+</div>
+
+{is_confirm_auto_open && (
+    <div className='confirm-modal-overlay' onClick={() => setIsConfirmAutoOpen(false)}>
+        <div className='confirm-modal' onClick={e => e.stopPropagation()}>
+            <Text as='h3' size='s' weight='bold'>
+                {localize('Confirm Auto Trading')}
+            </Text>
+            <Text size='xs' className='confirm-modal__warning'>
+                {localize('This will place up to')} <strong>{max_runs}</strong>{' '}
+                {localize('trades automatically, without asking you to confirm each one, until the limit is reached or you click Stop.')}
+            </Text>
+            <div className='confirm-modal__actions'>
+                <Button text={localize('Cancel')} onClick={() => setIsConfirmAutoOpen(false)} secondary />
+                <Button text={localize('I Understand, Start')} onClick={handleConfirmStartAuto} primary />
+            </div>
+        </div>
+    </div>
+)}
+
+
 
             {has_signal ? (
                 <div className={classNames('top-pick', `top-pick--${getScoreTier(top_pick.score)}`)}>
