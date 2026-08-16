@@ -211,16 +211,31 @@ const handleConfirmStartAuto = () => {
             <Text size='xxxs' weight='bold' color='less-prominent'>
                 {localize('Recent Trades')}
             </Text>
+            
+
             {auto_trader_service.log.map(entry => (
-                <div
-                    key={entry.id}
-                    className={classNames('auto-trade-log__row', `auto-trade-log__row--${entry.status}`)}
-                >
-                    <span>{SYMBOL_DISPLAY_NAMES[entry.symbol] ?? entry.symbol}</span>
-                    <span>{entry.contract_type}{entry.barrier ? ` (${entry.barrier})` : ''}</span>
-                    <span>{entry.status === 'success' ? `#${entry.contract_id}` : entry.error}</span>
-                </div>
-            ))}
+    <div
+        key={entry.id}
+        className={classNames('auto-trade-log__row', `auto-trade-log__row--${entry.status}`)}
+    >
+        <span>{SYMBOL_DISPLAY_NAMES[entry.symbol] ?? entry.symbol}</span>
+        <span>{entry.contract_type}{entry.barrier ? ` (${entry.barrier})` : ''}</span>
+        <span>{entry.status === 'success' ? `#${entry.contract_id}` : entry.error}</span>
+        {entry.status === 'success' && (
+            <span
+                className={classNames('outcome-badge', {
+                    'outcome-badge--won': entry.outcome === 'won',
+                    'outcome-badge--lost': entry.outcome === 'lost',
+                    'outcome-badge--pending': entry.outcome === 'pending',
+                })}
+            >
+                {entry.outcome === 'won' && `✓ ${localize('Won')}`}
+                {entry.outcome === 'lost' && `✗ ${localize('Lost')}`}
+                {entry.outcome === 'pending' && localize('Pending')}
+            </span>
+        )}
+    </div>
+))}
         </div>
     )}
 </div>

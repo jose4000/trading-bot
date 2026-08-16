@@ -1,6 +1,7 @@
 import { action, makeObservable, observable } from 'mobx';
 import { scanner_engine } from '@/services/scanner/ScannerEngine';
 import { manual_trade_service, TDigitContractType } from '@/services/manual-trade/manual-trade-service';
+import { api_base } from '@/external/bot-skeleton';
 
 export type TAutoTradeCategory = 'even_odd' | 'over_under' | 'matches_differs';
 
@@ -24,6 +25,8 @@ export type TAutoTradeLogEntry = {
     status: 'success' | 'failed';
     contract_id?: number;
     error?: string;
+    outcome?: 'won' | 'lost' | 'pending'; // only set for successfully placed trades
+    profit?: number;
 };
 
 type TDecision = { symbol: string; contract_type: TDigitContractType; barrier?: string; confidence: number } | null;
@@ -119,6 +122,31 @@ class AutoTraderService {
         this.log = [entry, ...this.log].slice(0, 50);
     };
 
+    private subscribeToOutcome(contract_id: number, log_id: string) {
+    if (!api_base.api) return;
+
+    const subscription = api_base.api.onMessage().subscribe(({ data }: any) => {
+        if (
+            data?.msg_type === 'proposal_open_contract' &&
+            data?.proposal_open_contract?.contract_id === contract_id
+        ) {
+            const contract = data.proposal_open_contract;
+
+            if (contract.is_sold) {
+                const profit = Number(contract.profit ?? 0);
+                this.log = this.log.map(entry =>
+                    entry.id === log_id
+                        ? { ...entry, outcome: profit > 0 ? 'won' : 'lost', profit }
+                        : entry
+                );
+                subscription.unsubscribe();
+            }
+        }
+    });
+
+    api_base.api.send({ proposal_open_contract: 1, contract_id, subscribe: 1 });
+}
+
     private async loop() {
         if (!this.is_running || !this.config) return;
 
@@ -145,15 +173,20 @@ class AutoTraderService {
                     const buy = await manual_trade_service.buyContract(proposal.id, proposal.ask_price);
 
                     this.runs_completed += 1;
+                    const log_id = `auto-${Date.now()}`;
                     this.addLogEntry({
-                        id: `auto-${Date.now()}`,
+                        id: log_id,
                         timestamp: Date.now(),
                         symbol: decision.symbol,
                         contract_type: decision.contract_type,
                         barrier: decision.barrier,
                         status: 'success',
                         contract_id: buy.contract_id,
+                        outcome: 'pending'
                     });
+
+                    this.subscribeToOutcome(buy.contract_id, log_id);
+                    
                 } catch (err: any) {
                     this.runs_completed += 1;
                     this.addLogEntry({
