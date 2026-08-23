@@ -30,6 +30,20 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
 
 type TCategory = 'even_odd' | 'over_under' | 'matches_differs' | 'rise_fall' | 'touch_no_touch';
 
+type TDigitRank = 'most' | 'least' | 'default';
+
+function getDigitRanks(percentages: number[]): Record<number, TDigitRank> {
+    const ranks: Record<number, TDigitRank> = {};
+    for (let i = 0; i < 10; i++) ranks[i] = 'default';
+
+    const sorted = percentages.map((pct, digit) => ({ digit, pct })).sort((a, b) => b.pct - a.pct);
+    if (sorted[0]) ranks[sorted[0].digit] = 'most';
+    if (sorted[9]) ranks[sorted[9].digit] = 'least';
+
+    return ranks;
+}
+
+
 const ManualTraderComponent = observer(() => {
 
     const { client, scanner } = useStore();
@@ -71,6 +85,9 @@ const ManualTraderComponent = observer(() => {
     const odd_count = digit_history.length - even_count;
     const even_pct = digit_history.length > 0 ? (even_count / digit_history.length) * 100 : 0;
     const odd_pct = 100 - even_pct;
+
+     const percentages = scanner.getPercentages(symbol);
+    const digit_ranks = getDigitRanks(percentages);
 
     // Fetch a fresh proposal whenever trade parameters change
     React.useEffect(() => {
@@ -165,15 +182,15 @@ const ManualTraderComponent = observer(() => {
                 </div>
 
                 <div className='digit-trend'>
-              <label>{localize('Recent Digit Trend')}</label>
-                <div className='digit-trend__strip'>
-               {digit_history.length === 0 && (
+                    <label>{localize('Recent Digit Trend')}</label>
+                    <div className='digit-trend__strip'>
+                    {digit_history.length === 0 && (
                    <span className='digit-trend__empty'>{localize('Collecting data...')}</span>
-               )}
-                 {digit_history.map((digit, index) => {
-                 const is_even = digit % 2 === 0;
-                 return (
-                  <span
+                  )}
+                    {digit_history.map((digit, index) => {
+                   const is_even = digit % 2 === 0;
+                   return (
+                   <span
                     key={index}
                     className={classNames('digit-trend__item', {
                         'digit-trend__item--even': is_even,
@@ -181,11 +198,30 @@ const ManualTraderComponent = observer(() => {
                     })}
                 >
                     {is_even ? localize('Even') : localize('Odd')}
-                </span>
+                   </span>
             );
         })}
     </div>
 </div>
+   
+   <div className='digit-distribution'>
+    <label>{localize('Digit Distribution')}</label>
+    <div className='digit-distribution__row'>
+        {percentages.map((pct, digit) => (
+            <div key={digit} className='digit-distribution__cell'>
+                <div className={classNames('digit-distribution__circle', `digit-distribution__circle--${digit_ranks[digit]}`)}>
+                    {digit}
+                </div>
+                <span className='digit-distribution__pct'>{pct.toFixed(1)}%</span>
+            </div>
+        ))}
+    </div>
+</div>
+
+
+
+
+
    <div className='bias-context'>
       <div className='bias-context_header'>
         <label>
