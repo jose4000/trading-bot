@@ -192,6 +192,11 @@ body.theme--dark {
         background: #1a1a1a;
         color: #fff;
     }
+
+    .execute-summary__label,
+    .trade-row__field-label {
+        color: #999;
+    }
 }
 
 .guide-box {
@@ -252,5 +257,41 @@ body.theme--dark {
                 color: #fff;
             }
         }
+    }
+}
+
+.execute-summary {
+    display: flex;
+    gap: 24px;
+    margin: 16px 0;
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    &__label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #888;
+    }
+
+    &__value {
+        font-size: 16px;
+        font-weight: 700;
+    }
+}
+
+.trade-row__field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    &-label {
+        font-size: 9px;
+        color: #888;
+        font-weight: 600;
     }
 }

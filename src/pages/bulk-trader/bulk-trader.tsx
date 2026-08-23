@@ -210,6 +210,8 @@ const BulkTraderComponent = observer(() => {
                             )}
 
                             {!use_common_stake && (
+                                <div className='trade-row__field'>
+                                    <span className='trade-row__field-label'>{localize('Stake')}</span>
                                 <input
                                     type='number'
                                     min={0.35}
@@ -219,8 +221,10 @@ const BulkTraderComponent = observer(() => {
                                     disabled={is_executing}
                                     className='trade-row__stake'
                                 />
+                                </div>
                             )}
-
+                        <div className='trade-row__field'>
+                          <span className='trade-row__field-label'>{localize('Ticks')}</span>   
                             <input
                                 type='number'
                                 min={1}
@@ -230,6 +234,7 @@ const BulkTraderComponent = observer(() => {
                                 disabled={is_executing}
                                 className='trade-row__duration'
                             />
+                            </div>
 
                             {result ? (
                                 <span
@@ -256,12 +261,15 @@ const BulkTraderComponent = observer(() => {
             <Button text={localize('+ Add Trade')} onClick={addRow} disabled={is_executing} secondary />
 
             <div className='execute-summary'>
-                <div>
-                    {localize('Total Stake')}: <strong>{total_stake.toFixed(2)} {client?.currency}</strong>
-                </div>
-                <div>
-                    {localize('Trades')}: <strong>{rows.length}</strong>
-                </div>
+               <div className='execute-summary__item'>
+        <span className='execute-summary__label'>{localize('TOTAL STAKE')}</span>
+        <span className='execute-summary__value'>{total_stake.toFixed(2)} {client?.currency}</span>
+              </div>
+            
+            <div className='execute-summary__item'>
+                <span className='execute-summary__label'>{localize('NUMBER OF TRADES')}</span>
+                <span className='execute-summary__value'>{rows.length}</span>
+            </div>
             </div>
 
             <Button
