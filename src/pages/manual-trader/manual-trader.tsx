@@ -13,6 +13,7 @@ import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import './manual-trader.scss';
+import { api_base } from '@/external/bot-skeleton';
 
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -43,10 +44,28 @@ function getDigitRanks(percentages: number[]): Record<number, TDigitRank> {
     return ranks;
 }
 
+function subscribeToContractOutcome(contract_id: number, onUpdate: (contract: any) => void) {
+    if (!api_base.api) return;
+
+    const subscription = api_base.api.onMessage().subscribe(({ data }: any) => {
+        if (data?.msg_type === 'proposal_open_contract' && data?.proposal_open_contract?.contract_id === contract_id) {
+            const contract = data.proposal_open_contract;
+            onUpdate(contract);
+            if (contract.is_sold) {
+                subscription.unsubscribe();
+            }
+        }
+    });
+
+    api_base.api.send({ proposal_open_contract: 1, contract_id, subscribe: 1 });
+}
+
+
+
 
 const ManualTraderComponent = observer(() => {
 
-    const { client, scanner } = useStore();
+    const { client, scanner, transactions } = useStore();
     const { isDesktop } = useDevice();
     
    const [digit_history, setDigitHistory] = React.useState<number[]>([]);
@@ -152,6 +171,10 @@ const ManualTraderComponent = observer(() => {
                 success: true,
                 message: `${localize('Trade placed')} — ${localize('Contract ID')}: ${result.contract_id}`,
             });
+
+            subscribeToContractOutcome(result.contract_id, contract => {
+            transactions.onBotContractEvent(contract);
+          });
         } catch (err: any) {
             setBuyResult({ success: false, message: err.message || localize('Trade failed') });
         } finally {
