@@ -62,7 +62,8 @@ const TerminalPanel: React.FC<{
 );
 
 const ScannerComponent = observer(() => {
-    const { scanner, client } = useStore();
+    const { scanner, client, transactions } = useStore();
+    
 
     const [open_panels, setOpenPanels] = React.useState({
         auto: true,
@@ -105,6 +106,7 @@ const ScannerComponent = observer(() => {
             currency: client?.currency ?? 'USD',
             max_runs,
             cooldown_ms: 5000,
+            onContractUpdate: contract => transactions.onBotContractEvent(contract),
         });
         setIsConfirmAutoOpen(false);
     };
@@ -296,42 +298,7 @@ const ScannerComponent = observer(() => {
             </TerminalPanel>
 
             {/* ── Trade Log Panel ──────────────────────────── */}
-            {auto_trader_service.log.length > 0 && (
-                <TerminalPanel
-                    title='TRADE LOG'
-                    is_open={open_panels.log}
-                    onToggle={() => togglePanel('log')}
-                >
-                    <div className='term-log'>
-                        {auto_trader_service.log.map(entry => (
-                            <div
-                                key={entry.id}
-                                className={classNames('term-log__row', `term-log__row--${entry.status}`)}
-                            >
-                                <span>{SYMBOL_SHORT[entry.symbol] ?? entry.symbol}</span>
-                                <span>
-                                    {entry.contract_type}
-                                    {entry.barrier ? `(${entry.barrier})` : ''}
-                                </span>
-                                <span>{entry.status === 'success' ? `#${entry.contract_id}` : 'ERR'}</span>
-                                {entry.status === 'success' && (
-                                    <span
-                                        className={classNames('term-outcome', {
-                                            'term-outcome--won': entry.outcome === 'won',
-                                            'term-outcome--lost': entry.outcome === 'lost',
-                                            'term-outcome--pending': entry.outcome === 'pending',
-                                        })}
-                                    >
-                                        {entry.outcome === 'won' && 'WON'}
-                                        {entry.outcome === 'lost' && 'LOST'}
-                                        {entry.outcome === 'pending' && '···'}
-                                    </span>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </TerminalPanel>
-            )}
+           
 
             {is_confirm_auto_open && (
                 <div className='confirm-modal-overlay' onClick={() => setIsConfirmAutoOpen(false)}>

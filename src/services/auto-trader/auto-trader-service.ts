@@ -14,6 +14,7 @@ export type TAutoTradeConfig = {
     currency: string;
     max_runs: number;
     cooldown_ms: number;
+    onContractUpdate?: (contract: any) => void; // feeds the built-in Summary/Transactions/Journal panel
 };
 
 export type TAutoTradeLogEntry = {
@@ -131,6 +132,8 @@ class AutoTraderService {
             data?.proposal_open_contract?.contract_id === contract_id
         ) {
             const contract = data.proposal_open_contract;
+            // feed the built-in Deriv Summary/Transactions/Journal panel
+            this.config?.onContractUpdate?.(contract);
 
             if (contract.is_sold) {
                 const profit = Number(contract.profit ?? 0);
