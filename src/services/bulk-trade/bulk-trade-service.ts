@@ -1,4 +1,5 @@
 import { manual_trade_service, TDigitContractType } from '@/services/manual-trade/manual-trade-service';
+import { api_base } from '@/external/bot-skeleton';
 
 export type TBulkTradeRow = {
     id: string;
@@ -21,10 +22,31 @@ export type TBulkTradeResult = {
 class BulkTradeService {
     // Executes trades sequentially (not parallel) to avoid hitting Deriv's rate limits
     // and to keep behaviour predictable/debuggable.
+
+    private subscribeToOutcome(contract_id: number, onContractUpdate?: (contract: any) => void) {
+    if (!api_base.api || !onContractUpdate) return;
+
+    const subscription = api_base.api.onMessage().subscribe(({ data }: any) => {
+        if (
+            data?.msg_type === 'proposal_open_contract' &&
+            data?.proposal_open_contract?.contract_id === contract_id
+        ) {
+            const contract = data.proposal_open_contract;
+            onContractUpdate(contract);
+
+            if (contract.is_sold) {
+                subscription.unsubscribe();
+            }
+        }
+    });
+
+    api_base.api.send({ proposal_open_contract: 1, contract_id, subscribe: 1 });
+}
     async executeAll(
         rows: TBulkTradeRow[],
         currency: string,
-        onProgress: (id: string, result: TBulkTradeResult) => void
+        onProgress: (id: string, result: TBulkTradeResult) => void,
+         onContractUpdate?: (contract: any) => void
     ): Promise<TBulkTradeResult[]> {
         const results: TBulkTradeResult[] = [];
 
@@ -43,6 +65,8 @@ class BulkTradeService {
                 });
 
                 const buy = await manual_trade_service.buyContract(proposal.id, proposal.ask_price);
+
+                this.subscribeToOutcome(buy.contract_id, onContractUpdate);
 
                 const result: TBulkTradeResult = {
                     id: row.id,

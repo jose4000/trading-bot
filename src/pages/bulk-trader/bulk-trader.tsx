@@ -48,7 +48,7 @@ const makeRow = (): TBulkTradeRow => ({
 });
 
 const BulkTraderComponent = observer(() => {
-    const { client } = useStore();
+    const { client, transactions } = useStore();
     const { isDesktop } = useDevice();
 
     const [rows, setRows] = React.useState<TBulkTradeRow[]>([makeRow()]);
@@ -85,7 +85,9 @@ const BulkTraderComponent = observer(() => {
         try {
             await bulk_trade_service.executeAll(effective_rows, client?.currency ?? 'USD', (id, result) => {
                 setResults(prev => ({ ...prev, [id]: result }));
-            });
+            },
+            contract => transactions.onBotContractEvent(contract)
+        );
         } finally {
             setIsExecuting(false);
         }

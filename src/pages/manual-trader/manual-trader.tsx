@@ -89,6 +89,9 @@ const ManualTraderComponent = observer(() => {
      const percentages = scanner.getPercentages(symbol);
     const digit_ranks = getDigitRanks(percentages);
 
+    const current_stat = scanner.symbol_stats.find(s => s.symbol === symbol);
+    const current_digit = current_stat?.streaks.current_digit ?? null;
+
     // Fetch a fresh proposal whenever trade parameters change
     React.useEffect(() => {
         let cancelled = false;
@@ -206,6 +209,13 @@ const ManualTraderComponent = observer(() => {
    
    <div className='digit-distribution'>
     <label>{localize('Digit Distribution')}</label>
+     <div className='digit-distribution__wrapper'>
+        {current_digit !== null && (
+            <div
+                className='digit-distribution__pointer'
+                style={{ left: `${(current_digit + 0.5) * (100 / 10)}%` }}
+            />
+        )}
     <div className='digit-distribution__row'>
         {percentages.map((pct, digit) => (
             <div key={digit} className='digit-distribution__cell'>
@@ -216,6 +226,7 @@ const ManualTraderComponent = observer(() => {
             </div>
         ))}
     </div>
+  </div>
 </div>
 
 
