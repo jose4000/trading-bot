@@ -100,7 +100,7 @@ const ManualTraderComponent = observer(() => {
     if (category === 'over_under') return direction === 'over' ? 'DIGITOVER' : 'DIGITUNDER';
     if (category === 'rise_fall') return direction === 'rise' ? 'CALL' : 'PUT';
     if (category === 'matches_differs') return direction === 'matches' ? 'DIGITMATCH' : 'DIGITDIFF';
-    if (category === 'higher_lower') return direction === 'higher' ? 'CALL' : 'PUT';
+    if (category === 'higher_lower') return direction === 'higher' ? 'CALLE' : 'PUTE';
     if (category === 'ends_between_outside') return direction === 'ends_between' ? 'EXPIRYRANGE' : 'EXPIRYMISS';
     return direction === 'touch' ? 'ONETOUCH' : 'NOTOUCH';
 };
