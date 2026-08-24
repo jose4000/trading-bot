@@ -14,6 +14,7 @@ import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import './manual-trader.scss';
 import { api_base } from '@/external/bot-skeleton';
+import { market_list_service } from '@/services/markets/market-list-service';
 
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -195,17 +196,20 @@ const ManualTraderComponent = observer(() => {
             </div>
 
             <div className='trade-form'>
-                <div className='trade-form__row'>
-                    <label>{localize('Market')}</label>
-                    <select value={symbol} onChange={e => setSymbol(e.target.value)}>
-                        {VOLATILITY_SYMBOLS.map(s => (
-                            <option key={s} value={s}>
-                                {SYMBOL_DISPLAY_NAMES[s] ?? s}
-                            </option>
-                        ))}
-                    </select>
-
-                </div>
+               <div className='trade-form__row'>
+    <label>{localize('Market')}</label>
+    <select value={symbol} onChange={e => setSymbol(e.target.value)}>
+        {Object.entries(market_list_service.getGroupedMarkets()).map(([market_name, options]) => (
+            <optgroup key={market_name} label={market_name}>
+                {options.map(opt => (
+                    <option key={opt.symbol} value={opt.symbol}>
+                        {opt.display_name}
+                    </option>
+                ))}
+            </optgroup>
+        ))}
+    </select>
+</div>
 
                 <div className='digit-trend'>
                     <label>{localize('Recent Digit Trend')}</label>
@@ -401,19 +405,22 @@ const ManualTraderComponent = observer(() => {
                     </div>
                 </div>
 
-                {needsBarrier &&  category !== 'touch_no_touch' && (
-                    <div className='trade-form__row'>
-                        <label>{localize('Barrier Digit')}</label>
-                        <select value={barrier_digit} onChange={e => setBarrierDigit(Number(e.target.value))}>
-                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
-                                <option key={d} value={d}>
-                                    {d}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
+               {needsBarrier && category !== 'touch_no_touch' && (
+    <div className='trade-form__row'>
+        <label>{localize('Last Digit Prediction')}</label>
+        <div className='digit-picker'>
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+                <button
+                    key={d}
+                    className={classNames('digit-picker__item', { 'digit-picker__item--active': barrier_digit === d })}
+                    onClick={() => setBarrierDigit(d)}
+                >
+                    {d}
+                </button>
+            ))}
+        </div>
+    </div>
+)}
                                     {category === 'touch_no_touch' && (
                         <div className='trade-form__row'>
                             <label>{localize('Barrier Offset (e.g. +10 or -10)')}</label>

@@ -1,7 +1,7 @@
 import { api_base } from '@/external/bot-skeleton';
 import { doUntilDone } from '@/external/bot-skeleton/services/tradeEngine/utils/helpers';
 
-export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF' | 'CALL' | 'PUT' | 'ONETOUCH' | 'NOTOUCH';
+export type TDigitContractType = 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER' | 'DIGITMATCH' | 'DIGITDIFF' | 'CALL' | 'PUT' | 'ONETOUCH' | 'NOTOUCH' | 'EXPIRYRANGE' |'EXPIRYMISS';
 
 export type TDurationUnit = 't' | 'm' | 'h'; // ticks, minutes, hours
 export type TProposalParams = {
@@ -12,6 +12,7 @@ export type TProposalParams = {
     duration: number;
     duration_unit: TDurationUnit;
     barrier?: string;
+    barrier2?: string;
 };
 
 export type TProposalResult = {
@@ -47,6 +48,9 @@ class ManualTradeService {
 
         if (params.barrier !== undefined) {
             request.barrier = params.barrier;
+        }
+        if (params.barrier2 !== undefined) {
+            request.barrier2 = params.barrier2;
         }
 
         const response = await doUntilDone(() => api_base.api?.send(request), [], api_base);

@@ -460,3 +460,44 @@ body.theme--dark {
     transition: left 0.3s ease;
     z-index: 2;
 }
+
+.digit-picker {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.digit-picker__item {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        border-color: #999;
+    }
+
+    &--active {
+        background: #1e88e5;
+        border-color: #1565c0;
+        color: #fff;
+    }
+}
+
+body.theme--dark {
+    .digit-picker__item {
+        background: #262626;
+        border-color: #444;
+        color: #fff;
+
+        &--active {
+            background: #1e88e5;
+            border-color: #64b5f6;
+        }
+    }
+}
