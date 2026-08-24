@@ -30,7 +30,7 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     '1HZ100V': 'Volatility 100 (1s) Index',
 };
 
-type TCategory = 'even_odd' | 'over_under' | 'matches_differs' | 'rise_fall' | 'touch_no_touch';
+type TCategory = 'even_odd' | 'over_under' | 'matches_differs' | 'rise_fall' | 'touch_no_touch' | 'higher_lower' | 'ends_between_outside';
 
 type TDigitRank = 'most' | 'least' | 'default';
 
@@ -76,7 +76,7 @@ const ManualTraderComponent = observer(() => {
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [stake, setStake] = React.useState(10);
     const [duration, setDuration] = React.useState(5);
-    const [direction, setDirection] = React.useState<'even' | 'odd' | 'over' | 'under' | 'matches' | 'differs' | 'rise' | 'fall' | 'touch' | 'no_touch'>(
+    const [direction, setDirection] = React.useState<'even' | 'odd' | 'over' | 'under' | 'matches' | 'differs' | 'rise' | 'fall' | 'touch' | 'no_touch' | 'higher' | 'lower' | 'ends_between' | 'ends_outside'>(
         'even'
     );
     const [duration_unit, setDurationUnit] = React.useState<'t' | 'm'>('t');
@@ -91,15 +91,21 @@ const ManualTraderComponent = observer(() => {
 
     const [touch_barrier, setTouchBarrier] = React.useState('+10');
 
-    const getContractType = (): TDigitContractType => {
-        if (category === 'even_odd') return direction === 'even' ? 'DIGITEVEN' : 'DIGITODD';
-        if (category === 'over_under') return direction === 'over' ? 'DIGITOVER' : 'DIGITUNDER';
-        if (category === 'rise_fall') return direction === 'rise' ? 'CALL' : 'PUT';
-        if (category === 'matches_differs') return direction === 'matches' ? 'DIGITMATCH' : 'DIGITDIFF';
-        return direction === 'touch' ? 'ONETOUCH' : 'NOTOUCH';
-    };
+    const [higher_lower_barrier, setHigherLowerBarrier] = React.useState('+0.1');
+    const [range_barrier_low, setRangeBarrierLow] = React.useState('-0.5');
+    const [range_barrier_high, setRangeBarrierHigh] = React.useState('+0.5');
 
-    const needsBarrier = category === 'over_under' || category === 'matches_differs' || category === 'touch_no_touch';
+    const getContractType = (): TDigitContractType => {
+    if (category === 'even_odd') return direction === 'even' ? 'DIGITEVEN' : 'DIGITODD';
+    if (category === 'over_under') return direction === 'over' ? 'DIGITOVER' : 'DIGITUNDER';
+    if (category === 'rise_fall') return direction === 'rise' ? 'CALL' : 'PUT';
+    if (category === 'matches_differs') return direction === 'matches' ? 'DIGITMATCH' : 'DIGITDIFF';
+    if (category === 'higher_lower') return direction === 'higher' ? 'CALL' : 'PUT';
+    if (category === 'ends_between_outside') return direction === 'ends_between' ? 'EXPIRYRANGE' : 'EXPIRYMISS';
+    return direction === 'touch' ? 'ONETOUCH' : 'NOTOUCH';
+};
+
+    const needsBarrier = category === 'over_under' || category === 'matches_differs' || category === 'touch_no_touch' || category === 'higher_lower' || category === 'ends_between_outside';
 
     const even_count = digit_history.filter(d => d % 2 === 0).length;
     const odd_count = digit_history.length - even_count;
@@ -111,6 +117,11 @@ const ManualTraderComponent = observer(() => {
 
     const current_stat = scanner.symbol_stats.find(s => s.symbol === symbol);
     const current_digit = current_stat?.streaks.current_digit ?? null;
+
+    const most_frequent_digit = Object.entries(digit_ranks).find(([, rank]) => rank === 'most')?.[0];
+    const least_frequent_digit = Object.entries(digit_ranks).find(([, rank]) => rank === 'least')?.[0];
+    const most_frequent_pct = most_frequent_digit !== undefined ? percentages[Number(most_frequent_digit)] : 0;
+    const least_frequent_pct = least_frequent_digit !== undefined ? percentages[Number(least_frequent_digit)] : 0;
 
     // Fetch a fresh proposal whenever trade parameters change
     React.useEffect(() => {
@@ -124,14 +135,19 @@ const ManualTraderComponent = observer(() => {
         const timer = setTimeout(async () => {
             try {
                 const result = await manual_trade_service.getProposal({
-                    amount: stake,
-                    currency: client.currency,
-                    contract_type: getContractType(),
-                    symbol,
-                    duration,
-                    duration_unit: duration_unit,
-                    barrier: needsBarrier ? (category === 'touch_no_touch' ? touch_barrier : String(barrier_digit)) : undefined,
-                });
+    amount: stake,
+    currency: client.currency,
+    contract_type: getContractType(),
+    symbol,
+    duration,
+    duration_unit: duration_unit,
+    barrier:
+        category === 'touch_no_touch' ? touch_barrier :
+        category === 'higher_lower' ? higher_lower_barrier :
+        category === 'ends_between_outside' ? range_barrier_low :
+        needsBarrier ? String(barrier_digit) : undefined,
+    barrier2: category === 'ends_between_outside' ? range_barrier_high : undefined,
+});
                 if (!cancelled) setProposal(result);
             } catch (err: any) {
                 if (!cancelled) setProposalError(err.message || 'Failed to fetch proposal');
@@ -145,7 +161,7 @@ const ManualTraderComponent = observer(() => {
             clearTimeout(timer);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [category, symbol, stake, duration, direction, barrier_digit, client?.currency, touch_barrier, duration_unit]);
+    }, [category, symbol, stake, duration, direction, barrier_digit, client?.currency, touch_barrier, duration_unit, higher_lower_barrier, range_barrier_low, range_barrier_high]);
 
     React.useEffect(() => {
     scanner.startScanning();
@@ -256,11 +272,32 @@ const ManualTraderComponent = observer(() => {
   </div>
 </div>
 
+<div className='session-stat-panel'>
+    <div className='session-stat-panel__title'>{localize('Session Stats')}</div>
+    <div className='session-stat-panel__row'>
+        <div className='session-stat'>
+            <span className='session-stat__label'>{localize('Most Frequent Digit')}</span>
+            <div className='session-stat__value'>
+                <span className='session-stat__digit session-stat__digit--most'>{most_frequent_digit ?? '—'}</span>
+                <span className='session-stat__pct'>{most_frequent_pct.toFixed(1)}%</span>
+            </div>
+        </div>
+        <div className='session-stat'>
+            <span className='session-stat__label'>{localize('Least Frequent Digit')}</span>
+            <div className='session-stat__value'>
+                <span className='session-stat__digit session-stat__digit--least'>{least_frequent_digit ?? '—'}</span>
+                <span className='session-stat__pct'>{least_frequent_pct.toFixed(1)}%</span>
+            </div>
+        </div>
+    </div>
+    <Text size='xxxs' color='less-prominent' className='session-stat-panel__disclaimer'>
+        {localize(
+            'This shows which digit has appeared most/least in the current session — it is historical data, not a forecast. Each tick is statistically independent of the last.'
+        )}
+    </Text>
+</div>
 
-
-
-
-   <div className='bias-context'>
+<div className='bias-context'>
       <div className='bias-context_header'>
         <label>
             {localize('Session Even/Odd Bias')}
@@ -303,24 +340,31 @@ const ManualTraderComponent = observer(() => {
 <div className='trade-form__row'>
                     <label>{localize('Contract Category')}</label>
                     <div className='category-tabs'>
-                        {(['even_odd', 'over_under', 'matches_differs', 'rise_fall', 'touch_no_touch'] as TCategory[]).map(cat => (
-                            <button
-                                key={cat}
-                                className={classNames('category-tabs__item', { active: category === cat })}
-                                onClick={() => {
-                                    setCategory(cat);
-                                    setDirection(
-                                        cat === 'even_odd' ? 'even' : cat === 'over_under' ? 'over' : cat === 'matches_differs' ? 'matches' : cat === 'rise_fall' ? 'rise' : 'touch'
-                                    );
-                                }}
-                            >
-                                {cat === 'even_odd' && localize('Even/Odd')}
-                                {cat === 'over_under' && localize('Over/Under')}
-                                {cat === 'matches_differs' && localize('Matches/Differs')}
-                                {cat === 'rise_fall' && localize('Rise/Fall')}
-                                {cat === 'touch_no_touch' && localize('Touch/No Touch')}
-                            </button>
-                        ))}
+                        {(['even_odd', 'over_under', 'matches_differs', 'rise_fall', 'touch_no_touch', 'higher_lower', 'ends_between_outside'] as TCategory[]).map(cat => (
+    <button
+        key={cat}
+        className={classNames('category-tabs__item', { active: category === cat })}
+        onClick={() => {
+            setCategory(cat);
+            setDirection(
+                cat === 'even_odd' ? 'even' :
+                cat === 'over_under' ? 'over' :
+                cat === 'matches_differs' ? 'matches' :
+                cat === 'rise_fall' ? 'rise' :
+                cat === 'higher_lower' ? 'higher' :
+                cat === 'ends_between_outside' ? 'ends_between' : 'touch'
+            );
+        }}
+    >
+        {cat === 'even_odd' && localize('Even/Odd')}
+        {cat === 'over_under' && localize('Over/Under')}
+        {cat === 'matches_differs' && localize('Matches/Differs')}
+        {cat === 'rise_fall' && localize('Rise/Fall')}
+        {cat === 'touch_no_touch' && localize('Touch/No Touch')}
+        {cat === 'higher_lower' && localize('Higher/Lower')}
+        {cat === 'ends_between_outside' && localize('Ends Between/Outside')}
+    </button>
+))}
                     </div>
                 </div>
 
@@ -402,6 +446,27 @@ const ManualTraderComponent = observer(() => {
                         </>
                     )}
 
+                    {category === 'higher_lower' && (
+    <>
+        <button className={classNames({ active: direction === 'higher' })} onClick={() => setDirection('higher')}>
+            {localize('Higher')}
+        </button>
+        <button className={classNames({ active: direction === 'lower' })} onClick={() => setDirection('lower')}>
+            {localize('Lower')}
+        </button>
+    </>
+)}
+{category === 'ends_between_outside' && (
+    <>
+        <button className={classNames({ active: direction === 'ends_between' })} onClick={() => setDirection('ends_between')}>
+            {localize('Ends Between')}
+        </button>
+        <button className={classNames({ active: direction === 'ends_outside' })} onClick={() => setDirection('ends_outside')}>
+            {localize('Ends Outside')}
+        </button>
+    </>
+)}
+
                     </div>
                 </div>
 
@@ -432,6 +497,26 @@ const ManualTraderComponent = observer(() => {
                             />
                         </div>
                         )}
+
+                        {category === 'higher_lower' && (
+    <div className='trade-form__row'>
+        <label>{localize('Barrier Offset')}</label>
+        <input type='text' value={higher_lower_barrier} onChange={e => setHigherLowerBarrier(e.target.value)} placeholder='+0.1' />
+    </div>
+)}
+
+{category === 'ends_between_outside' && (
+    <div className='trade-form__row trade-form__row--split'>
+        <div>
+            <label>{localize('Lower Barrier')}</label>
+            <input type='text' value={range_barrier_low} onChange={e => setRangeBarrierLow(e.target.value)} placeholder='-0.5' />
+        </div>
+        <div>
+            <label>{localize('Upper Barrier')}</label>
+            <input type='text' value={range_barrier_high} onChange={e => setRangeBarrierHigh(e.target.value)} placeholder='+0.5' />
+        </div>
+    </div>
+)}
                         <div className='trade-form__row'>
                             <label>{localize('Duration Unit')}</label>
                             <div className='direction-toggle'>

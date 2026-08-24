@@ -501,3 +501,89 @@ body.theme--dark {
         }
     }
 }
+
+.session-stat-panel {
+    padding: 14px;
+    border-radius: 10px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+
+    &__title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #666;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    &__row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 10px;
+    }
+
+    &__disclaimer {
+        display: block;
+        font-style: italic;
+        line-height: 1.4;
+    }
+}
+
+.session-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &__label {
+        font-size: 10px;
+        color: #888;
+    }
+
+    &__value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__digit {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        color: #fff;
+
+        &--most {
+            background: #4caf50;
+        }
+
+        &--least {
+            background: #c62828;
+        }
+    }
+
+    &__pct {
+        font-size: 13px;
+        font-weight: 700;
+    }
+}
+
+body.theme--dark {
+    .session-stat-panel {
+        background: #1a1a1a;
+        border-color: #333;
+
+        &__title {
+            color: #999;
+        }
+    }
+
+    .session-stat__label {
+        color: #999;
+    }
+}
