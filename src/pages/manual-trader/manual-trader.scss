@@ -587,3 +587,87 @@ body.theme--dark {
         color: #999;
     }
 }
+
+// ── Arc-style digit distribution ──────────────────
+.digit-distribution__arc {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+}
+
+.digit-distribution__arc-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #1a1a1a;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+// ── Direct-buy action buttons ──────────────────────
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.action-button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &:not(:disabled):active {
+        transform: scale(0.98);
+    }
+
+    &--teal {
+        background: #00c896;
+        color: #04241c;
+    }
+
+    &--red {
+        background: #ff5252;
+        color: #2a0505;
+    }
+
+    &__label {
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    &__payout {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.9;
+    }
+
+    &__status {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.8;
+
+        &--error {
+            color: #fff3f3;
+        }
+    }
+}
