@@ -2,6 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import Text from '@/components/shared_ui/text';
+import DCircles from '@/components/d-circles/d-circles';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import {
     manual_trade_service,
@@ -15,19 +16,6 @@ import { api_base } from '@/external/bot-skeleton';
 import { market_list_service } from '@/services/markets/market-list-service';
 import './manual-trader.scss';
 
-const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
-    R_10: 'Volatility 10 Index',
-    R_25: 'Volatility 25 Index',
-    R_50: 'Volatility 50 Index',
-    R_75: 'Volatility 75 Index',
-    R_100: 'Volatility 100 Index',
-    '1HZ10V': 'Volatility 10 (1s) Index',
-    '1HZ25V': 'Volatility 25 (1s) Index',
-    '1HZ50V': 'Volatility 50 (1s) Index',
-    '1HZ75V': 'Volatility 75 (1s) Index',
-    '1HZ100V': 'Volatility 100 (1s) Index',
-};
-
 type TCategory =
     | 'even_odd'
     | 'over_under'
@@ -37,8 +25,6 @@ type TCategory =
     | 'higher_lower'
     | 'ends_between_outside';
 
-type TDigitRank = 'most' | 'least' | 'default';
-
 type TSide = {
     key: string;
     label: string;
@@ -47,17 +33,6 @@ type TSide = {
     barrier2?: string;
     color: 'teal' | 'red';
 };
-
-function getDigitRanks(percentages: number[]): Record<number, TDigitRank> {
-    const ranks: Record<number, TDigitRank> = {};
-    for (let i = 0; i < 10; i++) ranks[i] = 'default';
-
-    const sorted = percentages.map((pct, digit) => ({ digit, pct })).sort((a, b) => b.pct - a.pct);
-    if (sorted[0]) ranks[sorted[0].digit] = 'most';
-    if (sorted[9]) ranks[sorted[9].digit] = 'least';
-
-    return ranks;
-}
 
 function subscribeToContractOutcome(contract_id: number, onUpdate: (contract: any) => void) {
     if (!api_base.api) return;
@@ -78,9 +53,6 @@ function subscribeToContractOutcome(contract_id: number, onUpdate: (contract: an
 const ManualTraderComponent = observer(() => {
     const { client, scanner, transactions } = useStore();
     const { isDesktop } = useDevice();
-
-    const [digit_history, setDigitHistory] = React.useState<number[]>([]);
-    const [tick_lookahead, setTickLookahead] = React.useState(5);
 
     const [category, setCategory] = React.useState<TCategory>('even_odd');
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
@@ -163,21 +135,9 @@ const ManualTraderComponent = observer(() => {
     };
 
     const percentages = scanner.getPercentages(symbol);
-    const digit_ranks = getDigitRanks(percentages);
     const current_stat = scanner.symbol_stats.find(s => s.symbol === symbol);
     const current_digit = current_stat?.streaks.current_digit ?? null;
 
-    const most_frequent_digit = Object.entries(digit_ranks).find(([, rank]) => rank === 'most')?.[0];
-    const least_frequent_digit = Object.entries(digit_ranks).find(([, rank]) => rank === 'least')?.[0];
-    const most_frequent_pct = most_frequent_digit !== undefined ? percentages[Number(most_frequent_digit)] : 0;
-    const least_frequent_pct = least_frequent_digit !== undefined ? percentages[Number(least_frequent_digit)] : 0;
-
-    const even_count = digit_history.filter(d => d % 2 === 0).length;
-    const odd_count = digit_history.length - even_count;
-    const even_pct = digit_history.length > 0 ? (even_count / digit_history.length) * 100 : 0;
-    const odd_pct = 100 - even_pct;
-
-    // Fetch proposals for BOTH sides whenever trade parameters change
     React.useEffect(() => {
         let cancelled = false;
         setSideProposals({});
@@ -236,11 +196,7 @@ const ManualTraderComponent = observer(() => {
 
     React.useEffect(() => {
         scanner.startScanning();
-        const interval = setInterval(() => {
-            setDigitHistory(scanner.getDigitHistory(symbol, tick_lookahead));
-        }, 500);
-        return () => clearInterval(interval);
-    }, [scanner, symbol, tick_lookahead]);
+    }, [scanner]);
 
     const handleBuy = async (side: TSide) => {
         const proposal = side_proposals[side.key];
@@ -293,116 +249,9 @@ const ManualTraderComponent = observer(() => {
                     </select>
                 </div>
 
-                <div className='digit-trend'>
-                    <label>{localize('Recent Digit Trend')}</label>
-                    <div className='digit-trend__strip'>
-                        {digit_history.length === 0 && (
-                            <span className='digit-trend__empty'>{localize('Collecting data...')}</span>
-                        )}
-                        {digit_history.map((digit, index) => {
-                            const is_even = digit % 2 === 0;
-                            return (
-                                <span
-                                    key={index}
-                                    className={classNames('digit-trend__item', {
-                                        'digit-trend__item--even': is_even,
-                                        'digit-trend__item--odd': !is_even,
-                                    })}
-                                >
-                                    {is_even ? localize('Even') : localize('Odd')}
-                                </span>
-                            );
-                        })}
-                    </div>
-                </div>
-
                 <div className='digit-distribution'>
                     <label>{localize('Digit Distribution')}</label>
-                    <div className='digit-distribution__wrapper'>
-                        {current_digit !== null && (
-                            <div
-                                className='digit-distribution__pointer'
-                                style={{ left: `${(current_digit + 0.5) * (100 / 10)}%` }}
-                            />
-                        )}
-                        <div className='digit-distribution__row'>
-                            {percentages.map((pct, digit) => {
-                                const rank = digit_ranks[digit];
-                                const arc_color = rank === 'most' ? '#00c896' : rank === 'least' ? '#ff5252' : '#444';
-                                const arc_pct = Math.min(pct * 4, 100); // visually exaggerate for readability
-                                return (
-                                    <div key={digit} className='digit-distribution__cell'>
-                                        <div
-                                            className='digit-distribution__arc'
-                                            style={{
-                                                background: `conic-gradient(${arc_color} ${arc_pct}%, transparent ${arc_pct}% 100%)`,
-                                            }}
-                                        >
-                                            <div className='digit-distribution__arc-inner'>{digit}</div>
-                                        </div>
-                                        <span className='digit-distribution__pct'>{pct.toFixed(1)}%</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                <div className='session-stat-panel'>
-                    <div className='session-stat-panel__title'>{localize('Session Stats')}</div>
-                    <div className='session-stat-panel__row'>
-                        <div className='session-stat'>
-                            <span className='session-stat__label'>{localize('Most Frequent Digit')}</span>
-                            <div className='session-stat__value'>
-                                <span className='session-stat__digit session-stat__digit--most'>{most_frequent_digit ?? '—'}</span>
-                                <span className='session-stat__pct'>{most_frequent_pct.toFixed(1)}%</span>
-                            </div>
-                        </div>
-                        <div className='session-stat'>
-                            <span className='session-stat__label'>{localize('Least Frequent Digit')}</span>
-                            <div className='session-stat__value'>
-                                <span className='session-stat__digit session-stat__digit--least'>{least_frequent_digit ?? '—'}</span>
-                                <span className='session-stat__pct'>{least_frequent_pct.toFixed(1)}%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <Text size='xxxs' color='less-prominent' className='session-stat-panel__disclaimer'>
-                        {localize(
-                            'This shows which digit has appeared most/least in the current session — it is historical data, not a forecast.'
-                        )}
-                    </Text>
-                </div>
-
-                <div className='bias-context'>
-                    <div className='bias-context_header'>
-                        <label>{localize('Session Even/Odd Bias')}</label>
-                        <select value={tick_lookahead} onChange={e => setTickLookahead(Number(e.target.value))}>
-                            {[5, 10, 20].map(n => (
-                                <option key={n} value={n}>
-                                    {localize('Last')} {n} {localize('ticks')}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className='bias-context_bars'>
-                        <div className='bias-context_bar'>
-                            <span className='bias-context_label bias-context_label--even'>{localize('Even')}</span>
-                            <div className='bias-context_track'>
-                                <div className='bias-context_fill bias-context_fill--even' style={{ width: `${even_pct}%` }} />
-                            </div>
-                            <span className='bias-context_pct'>{even_pct.toFixed(0)}%</span>
-                        </div>
-                        <div className='bias-context_bar'>
-                            <span className='bias-context_label bias-context_label--odd'>{localize('Odd')}</span>
-                            <div className='bias-context_track'>
-                                <div className='bias-context_fill bias-context_fill--odd' style={{ width: `${odd_pct}%` }} />
-                            </div>
-                            <span className='bias-content_pct'>{odd_pct.toFixed(0)}%</span>
-                        </div>
-                    </div>
-                    <Text size='xxxs' color='less-prominent' className='bias-context_disclaimer'>
-                        {localize('This reflects what already happened — each tick is independent, not a prediction.')}
-                    </Text>
+                    <DCircles percentages={percentages} current_digit={current_digit} variant='two-tier' />
                 </div>
 
                 <div className='trade-form__row'>
@@ -508,7 +357,6 @@ const ManualTraderComponent = observer(() => {
                     </div>
                 </div>
 
-                {/* ── Direct-buy action buttons, one per side ── */}
                 <div className='action-buttons'>
                     {sides.map(side => {
                         const proposal = side_proposals[side.key];

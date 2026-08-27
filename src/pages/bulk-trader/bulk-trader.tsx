@@ -9,6 +9,7 @@ import { bulk_trade_service, TBulkTradeResult, TBulkTradeRow } from '@/services/
 import { TDigitContractType } from '@/services/manual-trade/manual-trade-service';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
+import DCircles from '@/components/d-circles/d-circles';
 import './bulk-trader.scss';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -48,7 +49,7 @@ const makeRow = (): TBulkTradeRow => ({
 });
 
 const BulkTraderComponent = observer(() => {
-    const { client, transactions } = useStore();
+    const { client, transactions, scanner } = useStore();
     const { isDesktop } = useDevice();
 
     const [rows, setRows] = React.useState<TBulkTradeRow[]>([makeRow()]);
@@ -58,6 +59,8 @@ const BulkTraderComponent = observer(() => {
     const [is_guide_open, setIsGuideOpen] = React.useState(true);
     const [is_executing, setIsExecuting] = React.useState(false);
     const [is_confirm_open, setIsConfirmOpen] = React.useState(false);
+    const [reference_symbol, setReferenceSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
+    const [num_trades, setNumTrades] = React.useState(1);
 
     const updateRow = (id: string, patch: Partial<TBulkTradeRow>) => {
         setRows(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)));
@@ -96,6 +99,23 @@ const BulkTraderComponent = observer(() => {
     const success_count = Object.values(results).filter(r => r.status === 'success').length;
     const failed_count = Object.values(results).filter(r => r.status === 'failed').length;
 
+    React.useEffect(() => {
+    scanner.startScanning();
+}, [scanner]);
+
+React.useEffect(() => {
+    setRows(prev => {
+        if (num_trades > prev.length) {
+            const additional = Array.from({ length: num_trades - prev.length }, () => makeRow());
+            return [...prev, ...additional];
+        }
+        if (num_trades < prev.length) {
+            return prev.slice(0, Math.max(num_trades, 1));
+        }
+        return prev;
+    });
+}, [num_trades]);
+
     return (
         <div className='tab__bulk-trader'>
             <div className='tab__bulk-trader__header'>
@@ -106,38 +126,39 @@ const BulkTraderComponent = observer(() => {
                     {localize('Configure and place multiple trades together')}
                 </Text>
             </div>
+       
+       <div className='trade-form__row'>
+    <label>{localize('Reference Market (for D-Circles)')}</label>
+    <select value={reference_symbol} onChange={e => setReferenceSymbol(e.target.value)}>
+        {VOLATILITY_SYMBOLS.map(s => (
+            <option key={s} value={s}>
+                {SYMBOL_DISPLAY_NAMES[s] ?? s}
+            </option>
+        ))}
+    </select>
+</div>
 
-           <div className='guide-box'>
-    <button className='guide-box__toggle' onClick={() => setIsGuideOpen(!is_guide_open)}>
-        <span>💡 {localize('How Bulk Trader Works')}</span>
-        <span className={classNames('guide-box__chevron', { 'guide-box__chevron--open': is_guide_open })}>▾</span>
-    </button>
-    {is_guide_open && (
-        <ol className='guide-box__steps'>
-            <li>
-                <strong>{localize('Add trades')}</strong> —{' '}
-                {localize('each row below is one trade. Click "+ Add Trade" to queue more.')}
-            </li>
-            <li>
-                <strong>{localize('Set up each row')}</strong> —{' '}
-                {localize('pick market, contract type, barrier (if needed), stake, and duration.')}
-            </li>
-            <li>
-                <strong>{localize('Optional: one shared stake')}</strong> —{' '}
-                {localize('check the box above to use the same stake for every trade instead.')}
-            </li>
-            <li>
-                <strong>{localize('Execute')}</strong> —{' '}
-                {localize('click "Execute All Trades", review the total, then confirm.')}
-            </li>
-            <li>
-                <strong>{localize('Trades run one at a time')}</strong> —{' '}
-                {localize('not simultaneously. Watch each row\u2019s status: pending → success or failed.')}
-            </li>
-        </ol>
-    )}
-</div> 
+<div className='digit-distribution'>
+    <label>{localize('Digit Distribution')}</label>
+    <DCircles
+        percentages={scanner.getPercentages(reference_symbol)}
+        current_digit={scanner.symbol_stats.find(s => s.symbol === reference_symbol)?.streaks.current_digit ?? null}
+        variant='four-tier'
+    />
+</div>
 
+<div className='trade-form__row'>
+    <label>{localize('Number of Trades')}</label>
+    <input
+        type='number'
+        min={1}
+        max={50}
+        value={num_trades}
+        onChange={e => setNumTrades(Number(e.target.value))}
+    />
+</div>
+           
+                 
 
 <div className='common-stake-toggle'>
                 <label>
@@ -237,31 +258,12 @@ const BulkTraderComponent = observer(() => {
                                 className='trade-row__duration'
                             />
                             </div>
-
-                            {result ? (
-                                <span
-                                    className={classNames('trade-row__status', `trade-row__status--${result.status}`)}
-                                >
-                                    {result.status === 'pending' && localize('Placing...')}
-                                    {result.status === 'success' && `${localize('OK')} #${result.contract_id}`}
-                                    {result.status === 'failed' && localize('Failed')}
-                                </span>
-                            ) : (
-                                <button
-                                    className='trade-row__remove'
-                                    onClick={() => removeRow(row.id)}
-                                    disabled={is_executing || rows.length === 1}
-                                >
-                                    ✕
-                                </button>
-                            )}
                         </div>
                     );
                 })}
             </div>
 
-            <Button text={localize('+ Add Trade')} onClick={addRow} disabled={is_executing} secondary />
-
+            
             <div className='execute-summary'>
                <div className='execute-summary__item'>
         <span className='execute-summary__label'>{localize('TOTAL STAKE')}</span>

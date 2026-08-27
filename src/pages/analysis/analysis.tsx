@@ -6,6 +6,7 @@ import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
+import DCircles from '@/components/d-circles/d-circles';
 import './analysis.scss';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -212,6 +213,11 @@ const AnalysisComponent = observer(() => {
                             {odd.toFixed(1)}%
                         </Text>
                     </div>
+
+                    <div className='category-d-circles'>
+                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
+                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
+                    </div>
                 </div>
 
                 <div className='strategy-panels__header'>
@@ -247,6 +253,11 @@ const AnalysisComponent = observer(() => {
                             {under.toFixed(1)}%
                         </Text>
                     </div>
+
+                    <div className='category-d-circles'>
+                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
+                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
+                    </div>
                 </div>
 
                 <div className='strategy-panels__header'>
@@ -281,6 +292,11 @@ const AnalysisComponent = observer(() => {
                         <Text size='xs' color='less-prominent'>
                             {differs.toFixed(1)}%
                         </Text>
+                    </div>
+
+                    <div className='category-d-circles'>
+                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
+                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
                     </div>
                 </div>
             </div>
