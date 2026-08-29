@@ -214,27 +214,24 @@ const AnalysisComponent = observer(() => {
                         </Text>
                     </div>
 
-                    <div className='category-d-circles'>
-                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
-                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
-                    </div>
+                   
                 </div>
 
                 <div className='strategy-panels__header'>
                     <Text as='h3' size='s' weight='bold'>
                         {localize('Over / Under')}
                     </Text>
-                    <select
-                        className='strategy-panels__barrier-select'
-                        value={over_under_barrier}
-                        onChange={e => setOverUnderBarrier(Number(e.target.value))}
-                    >
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
-                            <option key={d} value={d}>
-                                {localize('Barrier')} {d}
-                            </option>
-                        ))}
-                    </select>
+                    <div className='mini-digit-picker'>
+    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+        <button
+            key={d}
+            className={classNames('mini-digit-picker__item', { 'mini-digit-picker__item--active': over_under_barrier === d })}
+            onClick={() => setOverUnderBarrier(d)}
+        >
+            {d}
+        </button>
+    ))}
+</div>
                 </div>
                 <div className='even-odd-panels'>
                     <div className={classNames('even-odd-panel', { 'even-odd-panel--active': over >= 50 })}>
@@ -254,27 +251,24 @@ const AnalysisComponent = observer(() => {
                         </Text>
                     </div>
 
-                    <div className='category-d-circles'>
-                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
-                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
-                    </div>
+                   
                 </div>
 
                 <div className='strategy-panels__header'>
                     <Text as='h3' size='s' weight='bold'>
                         {localize('Matches / Differs')}
                     </Text>
-                    <select
-                        className='strategy-panels__barrier-select'
-                        value={matches_digit}
-                        onChange={e => setMatchesTarget(Number(e.target.value))}
-                    >
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
-                            <option key={d} value={d}>
-                                {localize('Digit')} {d}
-                            </option>
-                        ))}
-                    </select>
+                    <div className='mini-digit-picker'>
+    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+        <button
+            key={d}
+            className={classNames('mini-digit-picker__item', { 'mini-digit-picker__item--active': matches_digit === d })}
+            onClick={() => setMatchesTarget(d)}
+        >
+            {d}
+        </button>
+    ))}
+</div>
                 </div>
                 <div className='even-odd-panels'>
                     <div className={classNames('even-odd-panel', { 'even-odd-panel--active': matches >= 10 })}>
@@ -294,10 +288,7 @@ const AnalysisComponent = observer(() => {
                         </Text>
                     </div>
 
-                    <div className='category-d-circles'>
-                        <Text size='xxxs' color='less-prominent'>{localize('Digit Probability')}</Text>
-                        <DCircles percentages={percentages} current_digit={last_digit} variant='four-tier' />
-                    </div>
+                    
                 </div>
             </div>
         </div>

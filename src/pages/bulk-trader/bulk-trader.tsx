@@ -1,15 +1,13 @@
 import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
-import Button from '@/components/shared_ui/button';
 import Text from '@/components/shared_ui/text';
+import DCircles from '@/components/d-circles/d-circles';
 import { useStore } from '@/hooks/useStore';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
-import { bulk_trade_service, TBulkTradeResult, TBulkTradeRow } from '@/services/bulk-trade/bulk-trade-service';
-import { TDigitContractType } from '@/services/manual-trade/manual-trade-service';
+import { manual_trade_service, TDigitContractType } from '@/services/manual-trade/manual-trade-service';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
-import DCircles from '@/components/d-circles/d-circles';
 import './bulk-trader.scss';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -25,96 +23,83 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
     '1HZ100V': 'Volatility 100 (1s) Index',
 };
 
-const CONTRACT_TYPE_LABELS: Record<TDigitContractType, string> = {
-    DIGITEVEN: 'Even',
-    DIGITODD: 'Odd',
-    DIGITOVER: 'Over',
-    DIGITUNDER: 'Under',
-    DIGITMATCH: 'Matches',
-    DIGITDIFF: 'Differs',
-    CALL: 'Rise',
-    PUT: 'Fall',
-};
-
-const NEEDS_BARRIER: TDigitContractType[] = ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'];
-
-let row_id_counter = 0;
-const makeRow = (): TBulkTradeRow => ({
-    id: `row-${++row_id_counter}`,
-    symbol: VOLATILITY_SYMBOLS[4],
-    contract_type: 'DIGITEVEN',
-    stake: 10,
-    duration: 5,
-    barrier: undefined,
-});
+type TCategory = 'even_odd' | 'over_under' | 'matches_differs';
+type TSide = { key: string; label: string; contract_type: TDigitContractType; barrier?: string; color: 'teal' | 'red' };
+type TRowResult = { index: number; status: 'pending' | 'success' | 'failed'; contract_id?: number; error?: string };
 
 const BulkTraderComponent = observer(() => {
-    const { client, transactions, scanner } = useStore();
+    const { client, scanner, transactions } = useStore();
     const { isDesktop } = useDevice();
 
-    const [rows, setRows] = React.useState<TBulkTradeRow[]>([makeRow()]);
-    const [use_common_stake, setUseCommonStake] = React.useState(false);
-    const [common_stake, setCommonStake] = React.useState(10);
-    const [results, setResults] = React.useState<Record<string, TBulkTradeResult>>({});
-    const [is_guide_open, setIsGuideOpen] = React.useState(true);
-    const [is_executing, setIsExecuting] = React.useState(false);
-    const [is_confirm_open, setIsConfirmOpen] = React.useState(false);
-    const [reference_symbol, setReferenceSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
+    const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
+    const [category, setCategory] = React.useState<TCategory>('even_odd');
+    const [barrier_digit, setBarrierDigit] = React.useState(5);
+    const [stake, setStake] = React.useState(0.5);
+    const [duration, setDuration] = React.useState(1);
     const [num_trades, setNumTrades] = React.useState(1);
 
-    const updateRow = (id: string, patch: Partial<TBulkTradeRow>) => {
-        setRows(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)));
-    };
-
-    const addRow = () => setRows(prev => [...prev, makeRow()]);
-    const removeRow = (id: string) => setRows(prev => prev.filter(r => r.id !== id));
-
-    const effective_rows = rows.map(r => ({
-        ...r,
-        stake: use_common_stake ? common_stake : r.stake,
-    }));
-
-    const total_stake = effective_rows.reduce((sum, r) => sum + r.stake, 0);
-
-    const handleExecuteClick = () => {
-        if (rows.length === 0) return;
-        setResults({});
-        setIsConfirmOpen(true);
-    };
-
-    const handleConfirmExecute = async () => {
-        setIsConfirmOpen(false);
-        setIsExecuting(true);
-        try {
-            await bulk_trade_service.executeAll(effective_rows, client?.currency ?? 'USD', (id, result) => {
-                setResults(prev => ({ ...prev, [id]: result }));
-            },
-            contract => transactions.onBotContractEvent(contract)
-        );
-        } finally {
-            setIsExecuting(false);
-        }
-    };
-
-    const success_count = Object.values(results).filter(r => r.status === 'success').length;
-    const failed_count = Object.values(results).filter(r => r.status === 'failed').length;
+    const [results, setResults] = React.useState<TRowResult[]>([]);
+    const [is_executing, setIsExecuting] = React.useState(false);
+    const [executing_key, setExecutingKey] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-    scanner.startScanning();
-}, [scanner]);
+        scanner.startScanning();
+    }, [scanner]);
 
-React.useEffect(() => {
-    setRows(prev => {
-        if (num_trades > prev.length) {
-            const additional = Array.from({ length: num_trades - prev.length }, () => makeRow());
-            return [...prev, ...additional];
+    const percentages = scanner.getPercentages(symbol);
+    const current_digit = scanner.symbol_stats.find(s => s.symbol === symbol)?.streaks.current_digit ?? null;
+
+    const getSides = (): TSide[] => {
+        if (category === 'even_odd') {
+            return [
+                { key: 'even', label: localize('Even'), contract_type: 'DIGITEVEN', color: 'teal' },
+                { key: 'odd', label: localize('Odd'), contract_type: 'DIGITODD', color: 'red' },
+            ];
         }
-        if (num_trades < prev.length) {
-            return prev.slice(0, Math.max(num_trades, 1));
+        if (category === 'over_under') {
+            return [
+                { key: 'over', label: localize('Over'), contract_type: 'DIGITOVER', barrier: String(barrier_digit), color: 'teal' },
+                { key: 'under', label: localize('Under'), contract_type: 'DIGITUNDER', barrier: String(barrier_digit), color: 'red' },
+            ];
         }
-        return prev;
-    });
-}, [num_trades]);
+        return [
+            { key: 'matches', label: localize('Matches'), contract_type: 'DIGITMATCH', barrier: String(barrier_digit), color: 'teal' },
+            { key: 'differs', label: localize('Differs'), contract_type: 'DIGITDIFF', barrier: String(barrier_digit), color: 'red' },
+        ];
+    };
+
+    const handleFire = async (side: TSide) => {
+        setExecutingKey(side.key);
+        setIsExecuting(true);
+        const new_results: TRowResult[] = Array.from({ length: num_trades }, (_, i) => ({ index: i, status: 'pending' }));
+        setResults(new_results);
+
+        for (let i = 0; i < num_trades; i++) {
+            try {
+                const proposal = await manual_trade_service.getProposal({
+                    amount: stake,
+                    currency: client?.currency ?? 'USD',
+                    contract_type: side.contract_type,
+                    symbol,
+                    duration,
+                    duration_unit: 't',
+                    barrier: side.barrier,
+                });
+                const buy = await manual_trade_service.buyContract(proposal.id, proposal.ask_price);
+                setResults(prev => prev.map(r => (r.index === i ? { ...r, status: 'success', contract_id: buy.contract_id } : r)));
+                transactions.onBotContractEvent({ contract_id: buy.contract_id } as any);
+            } catch (err: any) {
+                setResults(prev => prev.map(r => (r.index === i ? { ...r, status: 'failed', error: err.message } : r)));
+            }
+        }
+
+        setIsExecuting(false);
+        setExecutingKey(null);
+    };
+
+    const sides = getSides();
+    const success_count = results.filter(r => r.status === 'success').length;
+    const failed_count = results.filter(r => r.status === 'failed').length;
 
     return (
         <div className='tab__bulk-trader'>
@@ -123,190 +108,106 @@ React.useEffect(() => {
                     {localize('Bulk Trader')}
                 </Text>
                 <Text as='p' color='prominent' lineHeight='s' size={isDesktop ? 's' : 'xxs'} className='subtitle'>
-                    {localize('Configure and place multiple trades together')}
+                    {localize('Fire multiple trades of the same type at once')}
                 </Text>
             </div>
-       
-       <div className='trade-form__row'>
-    <label>{localize('Reference Market (for D-Circles)')}</label>
-    <select value={reference_symbol} onChange={e => setReferenceSymbol(e.target.value)}>
-        {VOLATILITY_SYMBOLS.map(s => (
-            <option key={s} value={s}>
-                {SYMBOL_DISPLAY_NAMES[s] ?? s}
-            </option>
-        ))}
-    </select>
-</div>
 
-<div className='digit-distribution'>
-    <label>{localize('Digit Distribution')}</label>
-    <DCircles
-        percentages={scanner.getPercentages(reference_symbol)}
-        current_digit={scanner.symbol_stats.find(s => s.symbol === reference_symbol)?.streaks.current_digit ?? null}
-        variant='four-tier'
-    />
-</div>
-
-<div className='trade-form__row'>
-    <label>{localize('Number of Trades')}</label>
-    <input
-        type='number'
-        min={1}
-        max={50}
-        value={num_trades}
-        onChange={e => setNumTrades(Number(e.target.value))}
-    />
-</div>
-           
-                 
-
-<div className='common-stake-toggle'>
-                <label>
-                    <input
-                        type='checkbox'
-                        checked={use_common_stake}
-                        onChange={e => setUseCommonStake(e.target.checked)}
-                    />
-                    {localize('Use one stake for all trades')}
-                </label>
-                {use_common_stake && (
-                    <input
-                        type='number'
-                        min={0.35}
-                        step={0.01}
-                        value={common_stake}
-                        onChange={e => setCommonStake(Number(e.target.value))}
-                        className='common-stake-toggle__input'
-                    />
-                )}
+            <div className='trade-form__row'>
+                <label>{localize('Market')}</label>
+                <select value={symbol} onChange={e => setSymbol(e.target.value)}>
+                    {VOLATILITY_SYMBOLS.map(s => (
+                        <option key={s} value={s}>
+                            {SYMBOL_DISPLAY_NAMES[s] ?? s}
+                        </option>
+                    ))}
+                </select>
             </div>
 
-            <div className='trade-rows'>
-                {rows.map((row, index) => {
-                    const result = results[row.id];
-                    return (
-                        <div className='trade-row' key={row.id}>
-                            <div className='trade-row__index'>{index + 1}</div>
+            <div className='digit-distribution'>
+                <label>{localize('Digit Distribution')}</label>
+                <DCircles percentages={percentages} current_digit={current_digit} variant='four-tier' />
+            </div>
 
-                            <select
-                                value={row.symbol}
-                                onChange={e => updateRow(row.id, { symbol: e.target.value })}
-                                disabled={is_executing}
+            <div className='trade-form__row'>
+                <label>{localize('Contract Category')}</label>
+                <div className='category-tabs'>
+                    {(['even_odd', 'over_under', 'matches_differs'] as TCategory[]).map(cat => (
+                        <button
+                            key={cat}
+                            className={classNames('category-tabs__item', { active: category === cat })}
+                            onClick={() => setCategory(cat)}
+                        >
+                            {cat === 'even_odd' && localize('Even/Odd')}
+                            {cat === 'over_under' && localize('Over/Under')}
+                            {cat === 'matches_differs' && localize('Matches/Differs')}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {category !== 'even_odd' && (
+                <div className='trade-form__row'>
+                    <label>{localize('Target Digit')}</label>
+                    <div className='mini-digit-picker'>
+                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
+                            <button
+                                key={d}
+                                className={classNames('mini-digit-picker__item', { 'mini-digit-picker__item--active': barrier_digit === d })}
+                                onClick={() => setBarrierDigit(d)}
                             >
-                                {VOLATILITY_SYMBOLS.map(s => (
-                                    <option key={s} value={s}>
-                                        {SYMBOL_DISPLAY_NAMES[s] ?? s}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={row.contract_type}
-                                onChange={e => {
-                                    const ct = e.target.value as TDigitContractType;
-                                    updateRow(row.id, {
-                                        contract_type: ct,
-                                        barrier: NEEDS_BARRIER.includes(ct) ? '5' : undefined,
-                                    });
-                                }}
-                                disabled={is_executing}
-                            >
-                                {(Object.keys(CONTRACT_TYPE_LABELS) as TDigitContractType[]).map(ct => (
-                                    <option key={ct} value={ct}>
-                                        {CONTRACT_TYPE_LABELS[ct]}
-                                    </option>
-                                ))}
-                            </select>
-
-                            {NEEDS_BARRIER.includes(row.contract_type) && (
-                                <select
-                                    value={row.barrier}
-                                    onChange={e => updateRow(row.id, { barrier: e.target.value })}
-                                    disabled={is_executing}
-                                >
-                                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => (
-                                        <option key={d} value={d}>
-                                            {d}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
-
-                            {!use_common_stake && (
-                                <div className='trade-row__field'>
-                                    <span className='trade-row__field-label'>{localize('Stake')}</span>
-                                <input
-                                    type='number'
-                                    min={0.35}
-                                    step={0.01}
-                                    value={row.stake}
-                                    onChange={e => updateRow(row.id, { stake: Number(e.target.value) })}
-                                    disabled={is_executing}
-                                    className='trade-row__stake'
-                                />
-                                </div>
-                            )}
-                        <div className='trade-row__field'>
-                          <span className='trade-row__field-label'>{localize('Ticks')}</span>   
-                            <input
-                                type='number'
-                                min={1}
-                                max={10}
-                                value={row.duration}
-                                onChange={e => updateRow(row.id, { duration: Number(e.target.value) })}
-                                disabled={is_executing}
-                                className='trade-row__duration'
-                            />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            
-            <div className='execute-summary'>
-               <div className='execute-summary__item'>
-        <span className='execute-summary__label'>{localize('TOTAL STAKE')}</span>
-        <span className='execute-summary__value'>{total_stake.toFixed(2)} {client?.currency}</span>
-              </div>
-            
-            <div className='execute-summary__item'>
-                <span className='execute-summary__label'>{localize('NUMBER OF TRADES')}</span>
-                <span className='execute-summary__value'>{rows.length}</span>
-            </div>
-            </div>
-
-            <Button
-                text={is_executing ? localize('Executing...') : localize('Execute All Trades')}
-                onClick={handleExecuteClick}
-                disabled={is_executing || rows.length === 0}
-                primary
-                large
-                className='execute-button'
-            />
-
-            {(success_count > 0 || failed_count > 0) && !is_executing && (
-                <div className='results-summary'>
-                    {localize('Completed')}: {success_count} {localize('succeeded')}, {failed_count}{' '}
-                    {localize('failed')}
+                                {d}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {is_confirm_open && (
-                <div className='confirm-modal-overlay' onClick={() => setIsConfirmOpen(false)}>
-                    <div className='confirm-modal' onClick={e => e.stopPropagation()}>
-                        <Text as='h3' size='s' weight='bold'>
-                            {localize('Confirm Bulk Trade')}
-                        </Text>
-                        <Text size='xs' className='confirm-modal__warning'>
-                            {localize('You are about to place')} <strong>{rows.length}</strong>{' '}
-                            {localize('trades totalling')} <strong>{total_stake.toFixed(2)} {client?.currency}</strong>.{' '}
-                            {localize('Each trade will be placed one after another.')}
-                        </Text>
-                        <div className='confirm-modal__actions'>
-                            <Button text={localize('Cancel')} onClick={() => setIsConfirmOpen(false)} secondary />
-                            <Button text={localize('Confirm & Execute')} onClick={handleConfirmExecute} primary />
+            <div className='trade-form__row trade-form__row--split'>
+                <div>
+                    <label>{localize('Stake')} ({client?.currency ?? '—'})</label>
+                    <input type='number' min={0.35} step={0.01} value={stake} onChange={e => setStake(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label>{localize('Ticks')}</label>
+                    <input type='number' min={1} max={10} value={duration} onChange={e => setDuration(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label>{localize('Number of Trades')}</label>
+                    <input type='number' min={1} max={50} value={num_trades} onChange={e => setNumTrades(Number(e.target.value))} />
+                </div>
+            </div>
+
+            <div className='action-buttons'>
+                {sides.map(side => (
+                    <button
+                        key={side.key}
+                        className={classNames('action-button', `action-button--${side.color}`)}
+                        disabled={is_executing}
+                        onClick={() => handleFire(side)}
+                    >
+                        <span className='action-button__label'>{side.label}</span>
+                        <span className='action-button__status'>
+                            {executing_key === side.key ? localize('Executing...') : `${num_trades} ${localize('trades')}`}
+                        </span>
+                    </button>
+                ))}
+            </div>
+
+            {results.length > 0 && (
+                <div className='bulk-results'>
+                    {!is_executing && (
+                        <div className='bulk-results__summary'>
+                            {success_count} {localize('succeeded')}, {failed_count} {localize('failed')}
                         </div>
+                    )}
+                    <div className='bulk-results__grid'>
+                        {results.map(r => (
+                            <span key={r.index} className={classNames('bulk-results__chip', `bulk-results__chip--${r.status}`)}>
+                                {r.status === 'pending' && '…'}
+                                {r.status === 'success' && `#${r.contract_id}`}
+                                {r.status === 'failed' && '✕'}
+                            </span>
+                        ))}
                     </div>
                 </div>
             )}

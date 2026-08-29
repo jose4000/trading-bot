@@ -447,3 +447,70 @@ $term-text-dim: #6b7885;
         }
     }
 }
+
+.term-panel__body--static {
+    padding: 16px 14px;
+}
+
+.scan-visual {
+    position: relative;
+    margin: 16px 0;
+
+    &__bar-track {
+        position: relative;
+        height: 3px;
+        background: rgba(0, 230, 118, 0.15);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    &__bar {
+        position: absolute;
+        top: 0;
+        width: 40px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, #00e676, transparent);
+        transform: translateX(-50%);
+    }
+
+    &__label {
+        display: block;
+        margin-top: 8px;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        color: #00e676;
+        text-align: center;
+    }
+}
+
+.strategy-signal {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid $term-border;
+    background: rgba(255, 255, 255, 0.02);
+
+    &__header {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: $term-text-dim;
+        margin-bottom: 10px;
+    }
+
+    &__waiting {
+        font-size: 12px;
+        color: $term-text-dim;
+        line-height: 1.6;
+    }
+
+    &__active {
+        font-size: 13px;
+        color: $term-text;
+        line-height: 1.6;
+    }
+
+    &__trade {
+        color: $term-green;
+    }
+}

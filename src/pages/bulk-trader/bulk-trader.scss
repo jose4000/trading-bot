@@ -295,3 +295,86 @@ body.theme--dark {
         font-weight: 600;
     }
 }
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.action-button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &--teal {
+        background: #00c896;
+        color: #04241c;
+    }
+
+    &--red {
+        background: #ff5252;
+        color: #2a0505;
+    }
+
+    &__label {
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    &__status {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.9;
+    }
+}
+
+.bulk-results {
+    margin-top: 16px;
+
+    &__summary {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    &__grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    &__chip {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: #f5f5f5;
+
+        &--success {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2e7d32;
+        }
+
+        &--failed {
+            background: rgba(198, 40, 40, 0.15);
+            color: #c62828;
+        }
+
+        &--pending {
+            background: rgba(158, 158, 158, 0.15);
+            color: #757575;
+        }
+    }
+}

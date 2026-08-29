@@ -49,16 +49,21 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: #10151d;
-    color: #fff;
+    background: #f2f4f7;
+    color: #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
     font-weight: 700;
-    border: 1px solid #26313d;
+    border: 1px solid #d5dae1;
 }
 
+body.theme--dark .d-circles__arc-inner {
+    background: #2a3441;
+    color: #fff;
+    border-color: #3c4a5a;
+}
 .d-circles__pct {
     font-size: 10px;
     color: #888;
