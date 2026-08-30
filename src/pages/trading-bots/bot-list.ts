@@ -144,4 +144,15 @@ export const TRADING_BOTS: TBotDefinition[] = [
         category: 'Accumulators',
         xml: accumulatorsReverseDalembertOnStatReset,
     },
+
+    {
+    id: 'smart-trader-pro-risky',
+    name: 'Smart Trader Pro - High Risk',
+    category: 'Classic',
+    description: 'Aggressive version with higher stakes and faster martingale progression',
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <!-- Modified XML with higher risk parameters -->
+</xml>`
+  },
 ];
