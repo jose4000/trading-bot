@@ -7,6 +7,7 @@ import { useStore } from '@/hooks/useStore';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import { manual_trade_service, TDigitContractType } from '@/services/manual-trade/manual-trade-service';
 import { localize } from '@deriv-com/translations';
+import { api_base } from '@/external/bot-skeleton';
 import { useDevice } from '@deriv-com/ui';
 import './bulk-trader.scss';
 
@@ -26,6 +27,22 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
 type TCategory = 'even_odd' | 'over_under' | 'matches_differs';
 type TSide = { key: string; label: string; contract_type: TDigitContractType; barrier?: string; color: 'teal' | 'red' };
 type TRowResult = { index: number; status: 'pending' | 'success' | 'failed'; contract_id?: number; error?: string };
+
+function subscribeToContractOutcome(contract_id: number, onUpdate: (contract: any) => void) {
+    if (!api_base.api) return;
+
+    const subscription = api_base.api.onMessage().subscribe(({ data }: any) => {
+        if (data?.msg_type === 'proposal_open_contract' && data?.proposal_open_contract?.contract_id === contract_id) {
+            const contract = data.proposal_open_contract;
+            onUpdate(contract);
+            if (contract.is_sold) {
+                subscription.unsubscribe();
+            }
+        }
+    });
+
+    api_base.api.send({ proposal_open_contract: 1, contract_id, subscribe: 1 });
+}
 
 const BulkTraderComponent = observer(() => {
     const { client, scanner, transactions } = useStore();
@@ -86,8 +103,10 @@ const BulkTraderComponent = observer(() => {
                     barrier: side.barrier,
                 });
                 const buy = await manual_trade_service.buyContract(proposal.id, proposal.ask_price);
-                setResults(prev => prev.map(r => (r.index === i ? { ...r, status: 'success', contract_id: buy.contract_id } : r)));
-                transactions.onBotContractEvent({ contract_id: buy.contract_id } as any);
+setResults(prev => prev.map(r => (r.index === i ? { ...r, status: 'success', contract_id: buy.contract_id } : r)));
+subscribeToContractOutcome(buy.contract_id, contract => {
+    transactions.onBotContractEvent(contract);
+});
             } catch (err: any) {
                 setResults(prev => prev.map(r => (r.index === i ? { ...r, status: 'failed', error: err.message } : r)));
             }
