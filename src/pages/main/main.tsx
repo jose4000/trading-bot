@@ -53,6 +53,7 @@ const ManualTrader = lazy(() => import('../manual-trader'));
 const CopyTrading = lazy(() => import('../copy-trading'));
 const RiskCalculator = lazy(() => import('../risk-calculator'));
 const BulkTrader = lazy(() => import('../bulk-trader'));
+const StrategyBot = lazy(() => import('../strategy-bot'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -85,7 +86,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading', 'risk_calculator', 'bulk-trader'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading', 'risk_calculator', 'bulk_trader', 'strategy_bot'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -381,6 +382,7 @@ const AppWrapper = observer(() => {
                   active_tab === DBOT_TABS.MANUAL_TRADER ||
                   active_tab === DBOT_TABS.COPY_TRADING ||
                   active_tab === DBOT_TABS.RISK_CALCULATOR ||
+                  active_tab === DBOT_TABS.STRATEGY_BOT ||
                    active_tab === DBOT_TABS.BULK_TRADER,
             })}>
                 <div
@@ -626,6 +628,31 @@ const AppWrapper = observer(() => {
                                     <BulkTrader/>
                                 </Suspense>
                             </div>
+
+
+                             <div
+                                label={
+                                    <>
+                                        <LabelPairedChartLineCaptionRegularIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Strategy Bot' />
+                                    </>
+                                }
+                                id='id-strategy-bot'
+                            >
+                                <Suspense
+                                    fallback={<ChunkLoader message={localize('Please wait, loading strategy bot...')} />}
+                                >
+                                    <StrategyBot/>
+                                </Suspense>
+                            </div>
+
+
+
+
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
