@@ -1,0 +1,764 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="base_stake">baseStake</variable>
+    <variable id="current_stake">currentStake</variable>
+    <variable id="loss_counter">lossCounter</variable>
+    <variable id="win_counter">winCounter</variable>
+    <variable id="trade_number">tradeNumber</variable>
+    <variable id="profit_target">profitTarget</variable>
+    <variable id="stop_loss">stopLoss</variable>
+    <variable id="trend_direction">trendDirection</variable>
+    <variable id="market_condition">marketCondition</variable>
+    <variable id="use_martingale">useMartingale</variable>
+    <variable id="martingale_multiplier">martingaleMultiplier</variable>
+    <variable id="max_loss_streak">maxLossStreak</variable>
+    <variable id="profit_reset">profitReset</variable>
+    <variable id="current_profit">currentProfit</variable>
+    <variable id="max_consecutive_wins">maxConsecutiveWins</variable>
+    <variable id="consecutive_wins">consecutiveWins</variable>
+    <variable id="consecutive_losses">consecutiveLosses</variable>
+  </variables>
+
+  <!-- MAIN TRADE DEFINITION -->
+  <block type="trade_definition" id="main_trade_def" deletable="false" x="0" y="60">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="market_def" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">R_75</field>
+        <next>
+          <block type="trade_definition_tradetype" id="tradetype_def" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">overunder</field>
+            <next>
+              <block type="trade_definition_contracttype" id="contracttype_def" deletable="false" movable="false">
+                <field name="TYPE_LIST">both</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="candle_def" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="restart_def" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="error_def" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+
+    <!-- INITIALIZATION -->
+    <statement name="INITIALIZATION">
+      <block type="text_print" id="welcome_msg">
+        <value name="TEXT">
+          <shadow type="text" id="welcome_text">
+            <field name="TEXT">🤖 Smart Trader Pro v2.0 - Automated Trading System</field>
+          </shadow>
+        </value>
+        <next>
+          <!-- Set Base Stake -->
+          <block type="variables_set" id="set_base_stake">
+            <field name="VAR" id="base_stake">baseStake</field>
+            <value name="VALUE">
+              <block type="math_number" id="base_stake_value">
+                <field name="NUM">2</field>
+              </block>
+            </value>
+            <next>
+              <!-- Set Current Stake -->
+              <block type="variables_set" id="set_current_stake">
+                <field name="VAR" id="current_stake">currentStake</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="get_base_stake">
+                    <field name="VAR" id="base_stake">baseStake</field>
+                  </block>
+                </value>
+                <next>
+                  <!-- Set Profit Target -->
+                  <block type="variables_set" id="set_profit_target">
+                    <field name="VAR" id="profit_target">profitTarget</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="profit_target_value">
+                        <field name="NUM">20</field>
+                      </block>
+                    </value>
+                    <next>
+                      <!-- Set Stop Loss -->
+                      <block type="variables_set" id="set_stop_loss">
+                        <field name="VAR" id="stop_loss">stopLoss</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="stop_loss_value">
+                            <field name="NUM">50</field>
+                          </block>
+                        </value>
+                        <next>
+                          <!-- Set Martingale Multiplier -->
+                          <block type="variables_set" id="set_martingale_multiplier">
+                            <field name="VAR" id="martingale_multiplier">martingaleMultiplier</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="martingale_multiplier_value">
+                                <field name="NUM">2.1</field>
+                              </block>
+                            </value>
+                            <next>
+                              <!-- Set Max Loss Streak -->
+                              <block type="variables_set" id="set_max_loss_streak">
+                                <field name="VAR" id="max_loss_streak">maxLossStreak</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="max_loss_streak_value">
+                                    <field name="NUM">5</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <!-- Initialize Counters -->
+                                  <block type="variables_set" id="init_loss_counter">
+                                    <field name="VAR" id="loss_counter">lossCounter</field>
+                                    <value name="VALUE">
+                                      <block type="math_number" id="init_loss_value">
+                                        <field name="NUM">0</field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="init_win_counter">
+                                        <field name="VAR" id="win_counter">winCounter</field>
+                                        <value name="VALUE">
+                                          <block type="math_number" id="init_win_value">
+                                            <field name="NUM">0</field>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="variables_set" id="init_trade_number">
+                                            <field name="VAR" id="trade_number">tradeNumber</field>
+                                            <value name="VALUE">
+                                              <block type="math_number" id="init_trade_value">
+                                                <field name="NUM">0</field>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="variables_set" id="init_consecutive_wins">
+                                                <field name="VAR" id="consecutive_wins">consecutiveWins</field>
+                                                <value name="VALUE">
+                                                  <block type="math_number" id="init_consecutive_wins_value">
+                                                    <field name="NUM">0</field>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="variables_set" id="init_consecutive_losses">
+                                                    <field name="VAR" id="consecutive_losses">consecutiveLosses</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="init_consecutive_losses_value">
+                                                        <field name="NUM">0</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <!-- Set Use Martingale -->
+                                                      <block type="variables_set" id="set_use_martingale">
+                                                        <field name="VAR" id="use_martingale">useMartingale</field>
+                                                        <value name="VALUE">
+                                                          <block type="logic_boolean" id="use_martingale_value">
+                                                            <field name="BOOL">TRUE</field>
+                                                          </block>
+                                                        </value>
+                                                        <next>
+                                                          <!-- Status Message -->
+                                                          <block type="notify" id="init_notify">
+                                                            <field name="NOTIFICATION_TYPE">info</field>
+                                                            <field name="NOTIFICATION_SOUND">earned-money</field>
+                                                            <value name="MESSAGE">
+                                                              <shadow type="text" id="init_msg">
+                                                                <field name="TEXT">🚀 Smart Trader Pro initialized! Base Stake: $2, Profit Target: $20, Stop Loss: $50</field>
+                                                              </shadow>
+                                                            </value>
+                                                          </block>
+                                                        </next>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+
+    <!-- TRADE EXECUTION -->
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="trade_options" collapsed="true">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="true"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="duration_value">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="amount_shadow">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="variables_get" id="get_current_stake">
+            <field name="VAR" id="current_stake">currentStake</field>
+          </block>
+        </value>
+        <value name="PREDICTION">
+          <shadow type="math_number_positive" id="prediction_shadow">
+            <field name="NUM">1</field>
+          </shadow>
+          <!-- Dynamic Prediction Logic -->
+          <block type="logic_ternary" id="prediction_logic">
+            <value name="IF">
+              <block type="logic_compare" id="prediction_condition">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="get_loss_counter">
+                    <field name="VAR" id="loss_counter">lossCounter</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="zero_check">
+                    <field name="NUM">0</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <value name="THEN">
+              <!-- Default: Trade Under 7 -->
+              <block type="math_number" id="default_prediction">
+                <field name="NUM">7</field>
+              </block>
+            </value>
+            <value name="ELSE">
+              <block type="logic_ternary" id="loss_based_prediction">
+                <value name="IF">
+                  <block type="logic_compare" id="loss_check">
+                    <field name="OP">GTE</field>
+                    <value name="A">
+                      <block type="variables_get" id="get_loss_counter_2">
+                        <field name="VAR" id="loss_counter">lossCounter</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number" id="loss_threshold">
+                        <field name="NUM">2</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <value name="THEN">
+                  <!-- After 2 losses: Trade Under 6 -->
+                  <block type="math_number" id="prediction_after_2_losses">
+                    <field name="NUM">6</field>
+                  </block>
+                </value>
+                <value name="ELSE">
+                  <block type="logic_ternary" id="loss_check_4">
+                    <value name="IF">
+                      <block type="logic_compare" id="loss_check_4_condition">
+                        <field name="OP">GTE</field>
+                        <value name="A">
+                          <block type="variables_get" id="get_loss_counter_4">
+                            <field name="VAR" id="loss_counter">lossCounter</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="loss_threshold_4">
+                            <field name="NUM">4</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="THEN">
+                      <!-- After 4 losses: Trade Under 5 -->
+                      <block type="math_number" id="prediction_after_4_losses">
+                        <field name="NUM">5</field>
+                      </block>
+                    </value>
+                    <value name="ELSE">
+                      <!-- After 1 loss: Trade Under 7 -->
+                      <block type="math_number" id="prediction_after_1_loss">
+                        <field name="NUM">7</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+              </block>
+            </value>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+
+  <!-- BEFORE PURCHASE LOGIC -->
+  <block type="before_purchase" id="before_purchase" deletable="false" x="0" y="1444">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="notify" id="before_trade_notify" collapsed="true">
+        <field name="NOTIFICATION_TYPE">info</field>
+        <field name="NOTIFICATION_SOUND">silent</field>
+        <value name="MESSAGE">
+          <shadow type="text" id="before_trade_msg">
+            <field name="TEXT">📊 Trade #{tradeNumber} - Stake: ${currentStake}</field>
+          </shadow>
+        </value>
+        <next>
+          <!-- Display Current Statistics -->
+          <block type="text_join" id="stats_display">
+            <field name="VARIABLE" id="stats_text">statsText</field>
+            <statement name="STACK">
+              <block type="text_statement" id="stats_wins">
+                <value name="TEXT">
+                  <shadow type="text" id="stats_wins_text">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="wins_label">
+                    <field name="TEXT">🏆 Wins: </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="stats_wins_value">
+                    <value name="TEXT">
+                      <shadow type="text" id="stats_wins_value_text">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="variables_get" id="get_win_counter">
+                        <field name="VAR" id="win_counter">winCounter</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="text_statement" id="stats_losses_label">
+                        <value name="TEXT">
+                          <shadow type="text" id="stats_losses_label_text">
+                            <field name="TEXT"></field>
+                          </shadow>
+                          <block type="text" id="losses_label">
+                            <field name="TEXT"> | ❌ Losses: </field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="text_statement" id="stats_losses_value">
+                            <value name="TEXT">
+                              <shadow type="text" id="stats_losses_value_text">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="variables_get" id="get_loss_counter_stats">
+                                <field name="VAR" id="loss_counter">lossCounter</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="stats_consecutive_label">
+                                <value name="TEXT">
+                                  <shadow type="text" id="stats_consecutive_label_text">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="text" id="consecutive_label">
+                                    <field name="TEXT"> | 🔥 Consecutive: </field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="text_statement" id="stats_consecutive_wins">
+                                    <value name="TEXT">
+                                      <shadow type="text" id="stats_consecutive_wins_text">
+                                        <field name="TEXT"></field>
+                                      </shadow>
+                                      <block type="variables_get" id="get_consecutive_wins">
+                                        <field name="VAR" id="consecutive_wins">consecutiveWins</field>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <!-- Execute Purchase -->
+              <block type="purchase" id="execute_purchase">
+                <field name="PURCHASE_LIST">DIGITUNDER</field>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <!-- AFTER PURCHASE LOGIC -->
+  <block type="after_purchase" id="after_purchase" collapsed="true" x="846" y="60">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="after_trade_check">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1"></mutation>
+        
+        <!-- WIN HANDLER -->
+        <value name="IF0">
+          <block type="contract_check_result" id="win_check">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <!-- On Win: Reset counters, adjust stake -->
+          <block type="variables_set" id="win_reset_stake">
+            <field name="VAR" id="current_stake">currentStake</field>
+            <value name="VALUE">
+              <block type="variables_get" id="win_get_base_stake">
+                <field name="VAR" id="base_stake">baseStake</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="win_reset_loss_counter">
+                <field name="VAR" id="loss_counter">lossCounter</field>
+                <value name="VALUE">
+                  <block type="math_number" id="win_loss_counter_reset">
+                    <field name="NUM">0</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="win_increment_win_counter">
+                    <field name="VAR" id="win_counter">winCounter</field>
+                    <value name="VALUE">
+                      <block type="math_arithmetic" id="win_increment">
+                        <field name="OP">ADD</field>
+                        <value name="A">
+                          <shadow type="math_number" id="win_increment_a">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="win_get_win_counter">
+                            <field name="VAR" id="win_counter">winCounter</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="win_increment_b">
+                            <field name="NUM">1</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="win_increment_consecutive_wins">
+                        <field name="VAR" id="consecutive_wins">consecutiveWins</field>
+                        <value name="VALUE">
+                          <block type="math_arithmetic" id="win_increment_consecutive">
+                            <field name="OP">ADD</field>
+                            <value name="A">
+                              <shadow type="math_number" id="win_consecutive_a">
+                                <field name="NUM">1</field>
+                              </shadow>
+                              <block type="variables_get" id="win_get_consecutive_wins">
+                                <field name="VAR" id="consecutive_wins">consecutiveWins</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <shadow type="math_number" id="win_consecutive_b">
+                                <field name="NUM">1</field>
+                              </shadow>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="win_reset_consecutive_losses">
+                            <field name="VAR" id="consecutive_losses">consecutiveLosses</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="win_reset_losses">
+                                <field name="NUM">0</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="notify" id="win_notification">
+                                <field name="NOTIFICATION_TYPE">success</field>
+                                <field name="NOTIFICATION_SOUND">earned-money</field>
+                                <value name="MESSAGE">
+                                  <shadow type="text" id="win_msg">
+                                    <field name="TEXT">✅ WIN! Stake reset to ${baseStake}. Total Profit: ${totalProfit}</field>
+                                  </shadow>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+
+        <!-- LOSS HANDLER -->
+        <value name="IF1">
+          <block type="contract_check_result" id="loss_check_result">
+            <field name="CHECK_RESULT">loss</field>
+          </block>
+        </value>
+        <statement name="DO1">
+          <!-- On Loss: Increment loss counter, apply martingale if enabled -->
+          <block type="variables_set" id="loss_increment_counter">
+            <field name="VAR" id="loss_counter">lossCounter</field>
+            <value name="VALUE">
+              <block type="math_arithmetic" id="loss_increment">
+                <field name="OP">ADD</field>
+                <value name="A">
+                  <shadow type="math_number" id="loss_increment_a">
+                    <field name="NUM">1</field>
+                  </shadow>
+                  <block type="variables_get" id="loss_get_loss_counter">
+                    <field name="VAR" id="loss_counter">lossCounter</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <shadow type="math_number" id="loss_increment_b">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="loss_increment_consecutive_losses">
+                <field name="VAR" id="consecutive_losses">consecutiveLosses</field>
+                <value name="VALUE">
+                  <block type="math_arithmetic" id="loss_increment_consecutive">
+                    <field name="OP">ADD</field>
+                    <value name="A">
+                      <shadow type="math_number" id="loss_consecutive_a">
+                        <field name="NUM">1</field>
+                      </shadow>
+                      <block type="variables_get" id="loss_get_consecutive_losses">
+                        <field name="VAR" id="consecutive_losses">consecutiveLosses</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <shadow type="math_number" id="loss_consecutive_b">
+                        <field name="NUM">1</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="loss_reset_consecutive_wins">
+                    <field name="VAR" id="consecutive_wins">consecutiveWins</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="loss_reset_wins">
+                        <field name="NUM">0</field>
+                      </block>
+                    </value>
+                    <next>
+                      <!-- Apply Martingale if enabled -->
+                      <block type="controls_if" id="martingale_check">
+                        <value name="IF0">
+                          <block type="variables_get" id="martingale_enabled_check">
+                            <field name="VAR" id="use_martingale">useMartingale</field>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block type="variables_set" id="martingale_apply">
+                            <field name="VAR" id="current_stake">currentStake</field>
+                            <value name="VALUE">
+                              <block type="math_arithmetic" id="martingale_multiply">
+                                <field name="OP">MULTIPLY</field>
+                                <value name="A">
+                                  <shadow type="math_number" id="martingale_a">
+                                    <field name="NUM">1</field>
+                                  </shadow>
+                                  <block type="variables_get" id="martingale_get_current_stake">
+                                    <field name="VAR" id="current_stake">currentStake</field>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <shadow type="math_number" id="martingale_b">
+                                    <field name="NUM">2.1</field>
+                                  </shadow>
+                                  <block type="variables_get" id="martingale_get_multiplier">
+                                    <field name="VAR" id="martingale_multiplier">martingaleMultiplier</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                          </block>
+                        </statement>
+                      </block>
+                      <!-- Check Stop Loss -->
+                      <block type="controls_if" id="stop_loss_check">
+                        <value name="IF0">
+                          <block type="logic_operation" id="stop_loss_condition">
+                            <field name="OP">AND</field>
+                            <value name="A">
+                              <block type="math_number_property" id="stop_loss_negative">
+                                <mutation xmlns="http://www.w3.org/1999/xhtml" divisor_input="false"></mutation>
+                                <field name="PROPERTY">NEGATIVE</field>
+                                <value name="NUMBER_TO_CHECK">
+                                  <shadow type="math_number" id="stop_loss_negative_value">
+                                    <field name="NUM">0</field>
+                                  </shadow>
+                                  <block type="total_profit" id="stop_loss_total_profit"></block>
+                                </value>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="logic_compare" id="stop_loss_compare">
+                                <field name="OP">GTE</field>
+                                <value name="A">
+                                  <block type="math_single" id="stop_loss_abs">
+                                    <field name="OP">ABS</field>
+                                    <value name="NUM">
+                                      <shadow type="math_number" id="stop_loss_abs_value">
+                                        <field name="NUM">9</field>
+                                      </shadow>
+                                      <block type="total_profit" id="stop_loss_total_profit_abs"></block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <value name="B">
+                                  <block type="variables_get" id="stop_loss_get_value">
+                                    <field name="VAR" id="stop_loss">stopLoss</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <!-- Stop Loss Reached -->
+                          <block type="notify" id="stop_loss_notify">
+                            <field name="NOTIFICATION_TYPE">error</field>
+                            <field name="NOTIFICATION_SOUND">error</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="stop_loss_msg">
+                                <field name="TEXT">⚠️ STOP LOSS REACHED! Total Loss: ${totalProfit}</field>
+                              </shadow>
+                            </value>
+                            <next>
+                              <block type="text_print" id="stop_loss_print">
+                                <value name="TEXT">
+                                  <shadow type="text" id="stop_loss_print_text">
+                                    <field name="TEXT">🔴 Bot paused due to stop loss. Please review strategy.</field>
+                                  </shadow>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <!-- Check Profit Target -->
+          <block type="controls_if" id="profit_target_check">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1"></mutation>
+            <value name="IF0">
+              <block type="contract_check_result" id="profit_check_win">
+                <field name="CHECK_RESULT">win</field>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="controls_if" id="profit_check_condition">
+                <value name="IF0">
+                  <block type="logic_compare" id="profit_compare">
+                    <field name="OP">GTE</field>
+                    <value name="A">
+                      <block type="total_profit" id="profit_total"></block>
+                    </value>
+                    <value name="B">
+                      <block type="variables_get" id="profit_get_target">
+                        <field name="VAR" id="profit_target">profitTarget</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="notify" id="profit_target_notify">
+                    <field name="NOTIFICATION_TYPE">success</field>
+                    <field name="NOTIFICATION_SOUND">earned-money</field>
+                    <value name="MESSAGE">
+                      <shadow type="text" id="profit_target_msg">
+                        <field name="TEXT">🎯 PROFIT TARGET REACHED! Total Profit: ${totalProfit}</field>
+                      </shadow>
+                    </value>
+                    <next>
+                      <block type="text_print" id="profit_target_print">
+                        <value name="TEXT">
+                          <shadow type="text" id="profit_target_print_text">
+                            <field name="TEXT">✅ Profit target achieved! Bot will continue trading.</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+              </block>
+            </statement>
+            <value name="IF1">
+              <block type="contract_check_result" id="loss_check_after">
+                <field name="CHECK_RESULT">loss</field>
+              </block>
+            </value>
+            <statement name="DO1">
+              <!-- After any loss, check if we should adjust strategy -->
+              <block type="controls_if" id="strategy_adjustment">
+                <value name="IF0">
+                  <block type="logic_compare" id="strategy_adjust_check">
+                    <field name="OP">GTE</field>
+                    <value name="A">
+                      <block type="variables_get" id="strategy_get_loss_counter">
+                        <field name="VAR" id="loss_counter">lossCounter</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number" id="strategy_adjust_threshold">
+                        <field name="NUM">3</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="notify" id="strategy_adjust_notify">
+                    <field name="NOTIFICATION_TYPE">info</field>
+                    <field name="NOTIFICATION_SOUND">silent</field>
+                    <value name="MESSAGE">
+                      <shadow type="text" id="strategy_adjust_msg">
+                        <field name="TEXT">🔄 Strategy adjusted: ${lossCounter} losses in a row. Trading Under ${currentPrediction}</field>
+                      </shadow>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>
