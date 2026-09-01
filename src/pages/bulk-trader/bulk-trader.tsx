@@ -51,6 +51,7 @@ const BulkTraderComponent = observer(() => {
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [category, setCategory] = React.useState<TCategory>('even_odd');
     const [barrier_digit, setBarrierDigit] = React.useState(5);
+    const [window_size, setWindowSize] = React.useState(1000);
     const [stake, setStake] = React.useState(0.5);
     const [duration, setDuration] = React.useState(1);
     const [num_trades, setNumTrades] = React.useState(1);
@@ -63,8 +64,13 @@ const BulkTraderComponent = observer(() => {
         scanner.startScanning();
     }, [scanner]);
 
+    React.useEffect(() => {
+    scanner.setWindowSize(window_size);
+}, [scanner, window_size]);
+
     const percentages = scanner.getPercentages(symbol);
     const current_digit = scanner.symbol_stats.find(s => s.symbol === symbol)?.streaks.current_digit ?? null;
+    const current_price = scanner.getLastQuote(symbol);
 
     const getSides = (): TSide[] => {
         if (category === 'even_odd') {
@@ -140,6 +146,17 @@ subscribeToContractOutcome(buy.contract_id, contract => {
                         </option>
                     ))}
                 </select>
+            </div>
+
+            <div className='trade-form__row trade-form__row--split'>
+                <div>
+                    <label>{localize('Number of Ticks')}</label>
+                    <input type='number' min={50} max={5000} value={window_size} onChange={e => setWindowSize(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label>{localize('Current Price')}</label>
+                    <div className='current-price-display'>{current_price !== null ? current_price.toFixed(2) : '—'}</div>
+                </div>
             </div>
 
             <div className='digit-distribution'>

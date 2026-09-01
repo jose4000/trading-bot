@@ -50,6 +50,12 @@ function subscribeToContractOutcome(contract_id: number, onUpdate: (contract: an
     api_base.api.send({ proposal_open_contract: 1, contract_id, subscribe: 1 });
 }
 
+function getPipDisplayDigits(symbol: string): number {
+    return 2; // simple default; adjust per-symbol later if needed
+}
+
+
+
 const ManualTraderComponent = observer(() => {
     const { client, scanner, transactions } = useStore();
     const { isDesktop } = useDevice();
@@ -57,7 +63,9 @@ const ManualTraderComponent = observer(() => {
     const [category, setCategory] = React.useState<TCategory>('even_odd');
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [stake, setStake] = React.useState(10);
+    const [window_size, setWindowSize] = React.useState(1000);
     const [duration, setDuration] = React.useState(5);
+    const [refresh_key, setRefreshKey] = React.useState(0);
     const [duration_unit, setDurationUnit] = React.useState<'t' | 'm'>('t');
     const [barrier_digit, setBarrierDigit] = React.useState(5);
     const [touch_barrier, setTouchBarrier] = React.useState('+10');
@@ -70,6 +78,7 @@ const ManualTraderComponent = observer(() => {
     const [is_fetching, setIsFetching] = React.useState(false);
     const [buying_key, setBuyingKey] = React.useState<string | null>(null);
     const [buy_result, setBuyResult] = React.useState<{ success: boolean; message: string } | null>(null);
+
 
     const needsBarrier =
         category === 'over_under' ||
@@ -137,6 +146,7 @@ const ManualTraderComponent = observer(() => {
     const percentages = scanner.getPercentages(symbol);
     const current_stat = scanner.symbol_stats.find(s => s.symbol === symbol);
     const current_digit = current_stat?.streaks.current_digit ?? null;
+    const current_price = scanner.getLastQuote(symbol);
 
     React.useEffect(() => {
         let cancelled = false;
@@ -192,11 +202,16 @@ const ManualTraderComponent = observer(() => {
         range_barrier_low,
         range_barrier_high,
         client?.currency,
+        refresh_key,
     ]);
 
     React.useEffect(() => {
         scanner.startScanning();
     }, [scanner]);
+
+    React.useEffect(() => {
+    scanner.setWindowSize(window_size);
+}, [scanner, window_size]);
 
     const handleBuy = async (side: TSide) => {
         const proposal = side_proposals[side.key];
@@ -217,6 +232,7 @@ const ManualTraderComponent = observer(() => {
             setBuyResult({ success: false, message: err.message || localize('Trade failed') });
         } finally {
             setBuyingKey(null);
+            setRefreshKey(k => k + 1);
         }
     };
 
@@ -247,6 +263,25 @@ const ManualTraderComponent = observer(() => {
                             </optgroup>
                         ))}
                     </select>
+                </div>
+
+                <div className='trade-form__row trade-form__row--split'>
+                    <div>
+                        <label>{localize('Number of Ticks')}</label>
+                        <input
+                            type='number'
+                            min={50}
+                            max={5000}
+                            value={window_size}
+                            onChange={e => setWindowSize(Number(e.target.value))}
+                        />
+                    </div>
+                    <div>
+                        <label>{localize('Current Price')}</label>
+                        <div className='current-price-display'>
+                            {current_price !== null ? current_price.toFixed(getPipDisplayDigits(symbol)) : '—'}
+                        </div>
+                    </div>
                 </div>
 
                 <div className='digit-distribution'>

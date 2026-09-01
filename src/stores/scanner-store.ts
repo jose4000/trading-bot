@@ -41,7 +41,7 @@ export default class ScannerStore {
     getAnalysis = (symbol: string): TSymbolAnalysis => scanner_engine.getAnalysis(symbol);
 
     getDigitHistory = (symbol: string, count = 20): number[] => scanner_engine.getDigitHistory(symbol, count);
-    
+    getLastQuote = (symbol: string): number | null => scanner_engine.getLastQuote(symbol);
 
     getPercentages = (symbol: string): number[] => scanner_engine.getAnalysis(symbol).frequency.percentages;
 }

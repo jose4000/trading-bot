@@ -14,6 +14,7 @@ import { PatternScanner } from './scanners/PatternScanner';
 class ScannerEngine {
     is_running = false;
     analysis: Record<string, TSymbolAnalysis> = {};
+    last_quotes: Record<string, number> = {};
 
     private tick_collector: TickCollector;
     private pattern_scanner: PatternScanner;
@@ -24,6 +25,7 @@ class ScannerEngine {
         makeObservable(this, {
             is_running: observable,
             analysis: observable,
+            last_quotes: observable,
             start: action,
             stop: action,
             setWindowSize: action,
@@ -91,6 +93,7 @@ class ScannerEngine {
         const digit = this.extractDigit(quote, symbol);
         const tick: TTick = { symbol, quote, digit, epoch };
         this.tick_collector.push(tick);
+        this.last_quotes = { ...this.last_quotes, [symbol]: quote };
         this.private_updateAnalysis(symbol);
     };
 
@@ -179,6 +182,8 @@ class ScannerEngine {
         const digits = this.tick_collector.getDigits(symbol);
         return digits.slice(-count);
     }
+
+    getLastQuote = (symbol: string): number | null => this.last_quotes[symbol] ?? null;
 }
 
 export const scanner_engine = new ScannerEngine();
