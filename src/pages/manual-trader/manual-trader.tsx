@@ -15,6 +15,7 @@ import { useDevice } from '@deriv-com/ui';
 import { api_base } from '@/external/bot-skeleton';
 import { market_list_service } from '@/services/markets/market-list-service';
 import './manual-trader.scss';
+import { accumulator_service } from '@/services/accumulator/accumulator-service';
 
 type TCategory =
     | 'even_odd'
@@ -78,6 +79,15 @@ const ManualTraderComponent = observer(() => {
     const [is_fetching, setIsFetching] = React.useState(false);
     const [buying_key, setBuyingKey] = React.useState<string | null>(null);
     const [buy_result, setBuyResult] = React.useState<{ success: boolean; message: string } | null>(null);
+
+    // accumulators 
+    const [show_accumulators, setShowAccumulators] = React.useState(false);
+const [accu_growth_rate, setAccuGrowthRate] = React.useState(0.01);
+const [accu_stake, setAccuStake] = React.useState(10);
+const [accu_take_profit, setAccuTakeProfit] = React.useState('');
+const [accu_proposal, setAccuProposal] = React.useState<{ id: string; ask_price: number } | null>(null);
+const [accu_error, setAccuError] = React.useState<string | null>(null);
+const [is_buying_accu, setIsBuyingAccu] = React.useState(false);
 
 
     const needsBarrier =
@@ -213,6 +223,49 @@ const ManualTraderComponent = observer(() => {
     scanner.setWindowSize(window_size);
 }, [scanner, window_size]);
 
+// proposal-fetching effect for accumulators
+     React.useEffect(() => {
+    if (!show_accumulators || !client?.currency || accu_stake <= 0) return;
+    let cancelled = false;
+    setAccuError(null);
+
+    const timer = setTimeout(async () => {
+        try {
+            const result = await accumulator_service.getProposal({
+                amount: accu_stake,
+                currency: client.currency,
+                symbol,
+                growth_rate: accu_growth_rate,
+                take_profit: accu_take_profit ? Number(accu_take_profit) : undefined,
+            });
+            if (!cancelled) setAccuProposal(result);
+        } catch (err: any) {
+            if (!cancelled) setAccuError(err.message);
+        }
+    }, 600);
+
+    return () => {
+        cancelled = true;
+        clearTimeout(timer);
+    };
+}, [show_accumulators, symbol, accu_stake, accu_growth_rate, accu_take_profit, client?.currency]);
+
+const handleBuyAccumulator = async () => {
+    if (!accu_proposal) return;
+    setIsBuyingAccu(true);
+    try {
+        await accumulator_service.buy(accu_proposal.id, accu_proposal.ask_price, symbol, accu_growth_rate);
+    } catch (err: any) {
+        setAccuError(err.message);
+    } finally {
+        setIsBuyingAccu(false);
+    }
+};
+
+const handleSellAccumulator = async () => {
+    await accumulator_service.sell();
+};
+
     const handleBuy = async (side: TSide) => {
         const proposal = side_proposals[side.key];
         if (!proposal) return;
@@ -264,6 +317,102 @@ const ManualTraderComponent = observer(() => {
                         ))}
                     </select>
                 </div>
+
+
+                <div className='trade-form__row'>
+    <label>{localize('Trade Mode')}</label>
+    <select value={show_accumulators ? 'accumulators' : 'standard'} onChange={e => setShowAccumulators(e.target.value === 'accumulators')}>
+        <option value='standard'>{localize('Standard Contracts')}</option>
+        <option value='accumulators'>{localize('Accumulators')}</option>
+    </select>
+</div>
+
+{show_accumulators && (
+    <div className='accumulator-panel'>
+        {!accumulator_service.open_position ? (
+            <>
+                <div className='trade-form__row'>
+                    <label>{localize('Growth Rate')}</label>
+                    <select value={accu_growth_rate} onChange={e => setAccuGrowthRate(Number(e.target.value))}>
+                        {[0.01, 0.02, 0.03, 0.04, 0.05].map(rate => (
+                            <option key={rate} value={rate}>
+                                {(rate * 100).toFixed(0)}%
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className='trade-form__row trade-form__row--split'>
+                    <div>
+                        <label>{localize('Stake')} ({client?.currency ?? '—'})</label>
+                        <input type='number' min={0.35} step={0.01} value={accu_stake} onChange={e => setAccuStake(Number(e.target.value))} />
+                    </div>
+                    <div>
+                        <label>{localize('Take Profit (optional)')}</label>
+                        <input
+                            type='number'
+                            value={accu_take_profit}
+                            onChange={e => setAccuTakeProfit(e.target.value)}
+                            placeholder={localize('None')}
+                        />
+                    </div>
+                </div>
+
+                {accu_error && <div className='proposal-preview__error'>{accu_error}</div>}
+                {accu_proposal && !accu_error && (
+                    <div className='proposal-preview__details'>
+                        <span>{localize('Stake')}: <strong>{accu_proposal.ask_price.toFixed(2)}</strong></span>
+                    </div>
+                )}
+
+                <button
+                    className='action-button action-button--teal'
+                    disabled={!accu_proposal || is_buying_accu}
+                    onClick={handleBuyAccumulator}
+                >
+                    <span className='action-button__label'>
+                        {is_buying_accu ? localize('Placing...') : localize('Buy Accumulator')}
+                    </span>
+                </button>
+            </>
+        ) : (
+            <div className='accumulator-position'>
+                <div className='accumulator-position__row'>
+                    <span>{localize('Growth Rate')}</span>
+                    <strong>{(accumulator_service.open_position.growth_rate * 100).toFixed(0)}%</strong>
+                </div>
+                <div className='accumulator-position__row'>
+                    <span>{localize('Buy Price')}</span>
+                    <strong>{accumulator_service.open_position.buy_price.toFixed(2)}</strong>
+                </div>
+                <div className='accumulator-position__row'>
+                    <span>{localize('Current Profit')}</span>
+                    <strong className={accumulator_service.open_position.profit >= 0 ? 'positive' : 'negative'}>
+                        {accumulator_service.open_position.profit.toFixed(2)}
+                    </strong>
+                </div>
+                {accumulator_service.open_position.is_sold ? (
+                    <>
+                        <div className='accumulator-position__closed'>{localize('Contract closed')}</div>
+                        <button className='action-button action-button--teal' onClick={() => accumulator_service.clearPosition()}>
+                            <span className='action-button__label'>{localize('Start New')}</span>
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        className='action-button action-button--red'
+                        disabled={accumulator_service.is_loading}
+                        onClick={handleSellAccumulator}
+                    >
+                        <span className='action-button__label'>
+                            {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
+                        </span>
+                    </button>
+                )}
+            </div>
+        )}
+    </div>
+)}
 
                 <div className='trade-form__row trade-form__row--split'>
                     <div>
