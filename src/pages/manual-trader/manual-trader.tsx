@@ -327,13 +327,21 @@ const handleSellAccumulator = async () => {
     </select>
 </div>
 
+
 {show_accumulators && (
     <div className='accumulator-panel'>
         {!accumulator_service.open_position ? (
             <>
-                <div className='trade-form__row'>
-                    <label>{localize('Growth Rate')}</label>
-                    <select value={accu_growth_rate} onChange={e => setAccuGrowthRate(Number(e.target.value))}>
+                <div className='accu-header'>
+                    <div className='accu-header__type'>
+                        <span className='accu-header__icon'>📈</span>
+                        <span>{localize('Accumulators')}</span>
+                    </div>
+                    <select
+                        className='accu-header__rate'
+                        value={accu_growth_rate}
+                        onChange={e => setAccuGrowthRate(Number(e.target.value))}
+                    >
                         {[0.01, 0.02, 0.03, 0.04, 0.05].map(rate => (
                             <option key={rate} value={rate}>
                                 {(rate * 100).toFixed(0)}%
@@ -342,37 +350,61 @@ const handleSellAccumulator = async () => {
                     </select>
                 </div>
 
-                <div className='trade-form__row trade-form__row--split'>
-                    <div>
-                        <label>{localize('Stake')} ({client?.currency ?? '—'})</label>
-                        <input type='number' min={0.35} step={0.01} value={accu_stake} onChange={e => setAccuStake(Number(e.target.value))} />
+                <div className='accu-stake-stepper'>
+                    <button
+                        className='accu-stake-stepper__btn'
+                        onClick={() => setAccuStake(Math.max(0.35, accu_stake - 1))}
+                    >
+                        −
+                    </button>
+                    <div className='accu-stake-stepper__value'>
+                        <span>{accu_stake.toFixed(2)}</span>
+                        <span className='accu-stake-stepper__currency'>{client?.currency ?? 'USD'}</span>
                     </div>
-                    <div>
-                        <label>{localize('Take Profit (optional)')}</label>
-                        <input
-                            type='number'
-                            value={accu_take_profit}
-                            onChange={e => setAccuTakeProfit(e.target.value)}
-                            placeholder={localize('None')}
-                        />
-                    </div>
+                    <button className='accu-stake-stepper__btn' onClick={() => setAccuStake(accu_stake + 1)}>
+                        +
+                    </button>
+                    <span className='accu-stake-stepper__label'>{localize('Stake')}</span>
+                </div>
+
+                <label className='accu-take-profit'>
+                    <input
+                        type='checkbox'
+                        checked={accu_take_profit !== ''}
+                        onChange={e => setAccuTakeProfit(e.target.checked ? '5' : '')}
+                    />
+                    <span>{localize('Take profit')}</span>
+                </label>
+
+                {accu_take_profit !== '' && (
+                    <input
+                        type='number'
+                        className='accu-take-profit__input'
+                        value={accu_take_profit}
+                        onChange={e => setAccuTakeProfit(e.target.value)}
+                        placeholder={localize('Amount')}
+                    />
+                )}
+
+                <div className='accu-info-row'>
+                    <span>{localize('Max. payout')}</span>
+                    <strong>
+                        {accu_proposal ? (accu_stake * Math.pow(1 + accu_growth_rate, 200)).toFixed(2) : '—'} {client?.currency}
+                    </strong>
+                </div>
+                <div className='accu-info-row'>
+                    <span>{localize('Growth rate')}</span>
+                    <strong>{(accu_growth_rate * 100).toFixed(0)}% {localize('per tick')}</strong>
                 </div>
 
                 {accu_error && <div className='proposal-preview__error'>{accu_error}</div>}
-                {accu_proposal && !accu_error && (
-                    <div className='proposal-preview__details'>
-                        <span>{localize('Stake')}: <strong>{accu_proposal.ask_price.toFixed(2)}</strong></span>
-                    </div>
-                )}
 
                 <button
-                    className='action-button action-button--teal'
+                    className='accu-buy-button'
                     disabled={!accu_proposal || is_buying_accu}
                     onClick={handleBuyAccumulator}
                 >
-                    <span className='action-button__label'>
-                        {is_buying_accu ? localize('Placing...') : localize('Buy Accumulator')}
-                    </span>
+                    {is_buying_accu ? localize('Placing...') : `⚡ ${localize('Buy')}`}
                 </button>
             </>
         ) : (
@@ -394,19 +426,17 @@ const handleSellAccumulator = async () => {
                 {accumulator_service.open_position.is_sold ? (
                     <>
                         <div className='accumulator-position__closed'>{localize('Contract closed')}</div>
-                        <button className='action-button action-button--teal' onClick={() => accumulator_service.clearPosition()}>
-                            <span className='action-button__label'>{localize('Start New')}</span>
+                        <button className='accu-buy-button' onClick={() => accumulator_service.clearPosition()}>
+                            {localize('Start New')}
                         </button>
                     </>
                 ) : (
                     <button
-                        className='action-button action-button--red'
+                        className='accu-buy-button accu-buy-button--sell'
                         disabled={accumulator_service.is_loading}
                         onClick={handleSellAccumulator}
                     >
-                        <span className='action-button__label'>
-                            {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
-                        </span>
+                        {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
                     </button>
                 )}
             </div>
