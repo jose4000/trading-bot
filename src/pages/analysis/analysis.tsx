@@ -104,6 +104,7 @@ const AnalysisComponent = observer(() => {
                 <Text as='p' color='prominent' lineHeight='s' size={isDesktop ? 's' : 'xxs'} className='subtitle'>
                     {localize('Digit distribution analysis for Volatility Indices')}
                 </Text>
+                 
             </div>
 
             <div className='analysis-controls'>
@@ -141,6 +142,11 @@ const AnalysisComponent = observer(() => {
                 <Text size='xxxs' color='less-prominent'>
                     {tick_count}/{window_size} {localize('ticks captured')}
                 </Text>
+                <div className='current-price-display'>
+                    {localize('Current Price')}: <strong>{scanner.getLastQuote(active_symbol)?.toFixed(2) ?? '—'}</strong>
+                </div>
+
+
             </div>
 
             <Text as='h3' size='s' weight='bold' className='distribution-title'>

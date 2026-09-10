@@ -47,6 +47,10 @@ export class TickCollector {
         return arr && arr.length > 0 ? arr[arr.length - 1] : null;
     }
 
+    getQuotes(symbol: string): number[] {
+    return this.getTicks(symbol).map(t => t.quote);
+}
+
     clear(symbol?: string) {
         if (symbol) {
             this.history[symbol] = [];

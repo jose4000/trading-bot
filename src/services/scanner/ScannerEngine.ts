@@ -20,6 +20,7 @@ class ScannerEngine {
     private pattern_scanner: PatternScanner;
     private frequency_scanner: FrequencyScanner;
     private message_subscription: { unsubscribe: () => void } | null = null;
+    private has_backfilled: Record<string, boolean> = {};
 
     constructor() {
         makeObservable(this, {
@@ -120,7 +121,7 @@ class ScannerEngine {
     };
 
     private async fetchHistoricalTicks(symbol: string): Promise<void> {
-        if (!api_base.api) return;
+        if (!api_base.api || this.has_backfilled[symbol]) return;
 
         try {
             const response = await api_base.api.send({
@@ -146,6 +147,7 @@ class ScannerEngine {
             });
 
             this.tick_collector.seed(symbol, ticks);
+            this.has_backfilled[symbol] = true;
             this.private_updateAnalysis(symbol);
         } catch {
             // Silently skip - lice ticks will still populate data going forward
@@ -182,6 +184,11 @@ class ScannerEngine {
         const digits = this.tick_collector.getDigits(symbol);
         return digits.slice(-count);
     }
+
+    getPriceHistory = (symbol: string, count = 30): number[] => {
+    const quotes = this.tick_collector.getQuotes(symbol);
+    return quotes.slice(-count);
+};
 
     getLastQuote = (symbol: string): number | null => this.last_quotes[symbol] ?? null;
 }

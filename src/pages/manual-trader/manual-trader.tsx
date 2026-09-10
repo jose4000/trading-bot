@@ -9,6 +9,7 @@ import {
     TDigitContractType,
     TProposalResult,
 } from '@/services/manual-trade/manual-trade-service';
+import MiniAccumulatorChart from '@/components/mini-accumulator-chart/mini-accumulator-chart';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -408,6 +409,31 @@ const handleSellAccumulator = async () => {
                 </button>
             </>
         ) : (
+            <>
+               <div className='accu-live-badge'>
+            <span className='accu-live-badge__dot' />
+            {localize('LIVE — inside range')}
+        </div>
+
+        {(() => {
+            const entry = accumulator_service.open_position.buy_price
+                ? scanner.getPriceHistory(symbol, 30)[0] ?? 0
+                : 0;
+            const range_pct = accumulator_service.open_position.growth_rate * 4;
+            const estimated_high = entry * (1 + range_pct);
+            const estimated_low = entry * (1 - range_pct);
+            const prices = scanner.getPriceHistory(symbol, 30);
+
+            return (
+                <>
+                    <MiniAccumulatorChart prices={prices} high_barrier={estimated_high} low_barrier={estimated_low} />
+                    <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
+                        {localize('Range shown is an approximation for visualization — actual knockout levels are calculated by Deriv and may differ.')}
+                    </Text>
+                </>
+            );
+        })()}
+
             <div className='accumulator-position'>
                 <div className='accumulator-position__row'>
                     <span>{localize('Growth Rate')}</span>
@@ -440,6 +466,7 @@ const handleSellAccumulator = async () => {
                     </button>
                 )}
             </div>
+            </>
         )}
     </div>
 )}

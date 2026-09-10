@@ -44,4 +44,6 @@ export default class ScannerStore {
     getLastQuote = (symbol: string): number | null => scanner_engine.getLastQuote(symbol);
 
     getPercentages = (symbol: string): number[] => scanner_engine.getAnalysis(symbol).frequency.percentages;
+
+    getPriceHistory = (symbol: string, count = 30): number[] => scanner_engine.getPriceHistory(symbol, count);
 }
