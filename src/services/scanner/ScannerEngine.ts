@@ -153,9 +153,17 @@ class ScannerEngine {
             // Silently skip - lice ticks will still populate data going forward
         }
     }
-
+    private subscribed_api: any = null;
     start = () => {
-        if (this.is_running || !api_base.api) return;
+        if (!api_base.api) return;
+
+        // if we're already subscribed to this exact connection, don't duplicate
+
+        if (this.is_running && this.subscribed_api === api_base.api) return;
+
+        // connection changed
+        this.message_subscription?.unsubscribe();
+        this.subscribed_api = api_base.api;
         this.is_running = true;
 
         this.message_subscription = api_base.api.onMessage().subscribe(({ data }: any) => {
