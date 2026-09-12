@@ -4,6 +4,7 @@ import { TickCollector } from './TickCollector';
 import { FrequencyScanner } from './scanners/FrequencyScanner';
 import { TSymbolAnalysis, TTick, VOLATILITY_SYMBOLS } from './types';
 import { PatternScanner } from './scanners/PatternScanner';
+import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
 
 /**
  * Orchestrator: receives every incoming tick, feeds it to TickCollector,
@@ -39,6 +40,14 @@ class ScannerEngine {
 
         VOLATILITY_SYMBOLS.forEach(symbol => {
             this.analysis[symbol] = this.buildEmptyAnalysis(symbol);
+        });
+
+        // re-subscribe to ticks if the connection changes
+        globalObserver.register('api.authorize', () => {
+            if (this.is_running) {
+                this.start();
+            }
+            
         });
     }
 
@@ -182,6 +191,7 @@ class ScannerEngine {
         this.is_running = false;
         this.message_subscription?.unsubscribe();
         this.message_subscription = null;
+        this.subscribed_api = null;
         api_base.api?.send({ forget_all: 'ticks' });
     };
 
