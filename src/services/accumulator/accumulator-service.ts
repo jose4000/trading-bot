@@ -6,6 +6,8 @@ export type TAccumulatorProposal = {
     id: string;
     ask_price: number;
     spot: number;
+    high_barrier?: number;
+    low_barrier?: number;
 };
 
 export type TOpenAccumulator = {
@@ -70,7 +72,9 @@ class AccumulatorService {
         const proposal = response?.proposal;
         if (!proposal) throw new Error('No proposal returned');
 
-        return { id: proposal.id, ask_price: proposal.ask_price, spot: proposal.spot };
+         console.log('[Accumulator] Raw proposal response:', proposal);
+
+        return { id: proposal.id, ask_price: proposal.ask_price, spot: proposal.spot,  high_barrier: proposal.high_barrier !== undefined ? Number(proposal.high_barrier) : undefined,  low_barrier: proposal.low_barrier !== undefined ? Number(proposal.low_barrier) : undefined, };
     }
 
     async buy(proposal_id: string, price: number, symbol: string, growth_rate: number): Promise<number> {

@@ -16,7 +16,7 @@ import { useDevice } from '@deriv-com/ui';
 import { api_base } from '@/external/bot-skeleton';
 import { market_list_service } from '@/services/markets/market-list-service';
 import './manual-trader.scss';
-import { accumulator_service } from '@/services/accumulator/accumulator-service';
+import { accumulator_service, TAccumulatorProposal } from '@/services/accumulator/accumulator-service';
 
 type TCategory =
     | 'even_odd'
@@ -74,6 +74,7 @@ const ManualTraderComponent = observer(() => {
     const [higher_lower_barrier, setHigherLowerBarrier] = React.useState('+0.1');
     const [range_barrier_low, setRangeBarrierLow] = React.useState('-0.5');
     const [range_barrier_high, setRangeBarrierHigh] = React.useState('+0.5');
+    const [accu_proposal, setAccuProposal] = React.useState<TAccumulatorProposal | null>(null);
 
     const [side_proposals, setSideProposals] = React.useState<Record<string, TProposalResult | null>>({});
     const [side_errors, setSideErrors] = React.useState<Record<string, string | null>>({});
@@ -86,7 +87,7 @@ const ManualTraderComponent = observer(() => {
 const [accu_growth_rate, setAccuGrowthRate] = React.useState(0.01);
 const [accu_stake, setAccuStake] = React.useState(10);
 const [accu_take_profit, setAccuTakeProfit] = React.useState('');
-const [accu_proposal, setAccuProposal] = React.useState<{ id: string; ask_price: number } | null>(null);
+
 const [accu_error, setAccuError] = React.useState<string | null>(null);
 const [is_buying_accu, setIsBuyingAccu] = React.useState(false);
 
@@ -338,17 +339,27 @@ const handleSellAccumulator = async () => {
                         <span className='accu-header__icon'>📈</span>
                         <span>{localize('Accumulators')}</span>
                     </div>
-                    <select
-                        className='accu-header__rate'
-                        value={accu_growth_rate}
-                        onChange={e => setAccuGrowthRate(Number(e.target.value))}
-                    >
+                    
+                    
+                </div>
+
+                <div className='accu-growth-rate-row'>
+                    <Text size='xxxs' color='less-prominent' className='accu-growth-rate-row__title'>
+                        {localize('Growth rate')}
+                    </Text>
+                    <div className='accu-growth-rate-row__pills'>
                         {[0.01, 0.02, 0.03, 0.04, 0.05].map(rate => (
-                            <option key={rate} value={rate}>
+                            <button
+                                key={rate}
+                                className={classNames('accu-growth-rate-row__pill', {
+                                    'accu-growth-rate-row__pill--active': accu_growth_rate === rate,
+                                })}
+                                onClick={() => setAccuGrowthRate(rate)}
+                            >
                                 {(rate * 100).toFixed(0)}%
-                            </option>
+                            </button>
                         ))}
-                    </select>
+                    </div>
                 </div>
 
                 <div className='accu-stake-stepper'>
@@ -389,13 +400,13 @@ const handleSellAccumulator = async () => {
 
                 <div className='accu-info-row'>
                     <span>{localize('Max. payout')}</span>
-                    <strong>
-                        {accu_proposal ? (accu_stake * Math.pow(1 + accu_growth_rate, 200)).toFixed(2) : '—'} {client?.currency}
+                    <strong className='accu-info-row__underlined'>
+                        {accu_proposal ? (accu_stake * Math.pow(1 + accu_growth_rate, 85)).toFixed(2) : '—'} {client?.currency}
                     </strong>
                 </div>
                 <div className='accu-info-row'>
-                    <span>{localize('Growth rate')}</span>
-                    <strong>{(accu_growth_rate * 100).toFixed(0)}% {localize('per tick')}</strong>
+                    <span>{localize('Max. ticks')}</span>
+                    <strong className='accu-info-row__underlined'>{accu_proposal ? '85' : '—'} {localize('ticks')}</strong>
                 </div>
 
                 {accu_error && <div className='proposal-preview__error'>{accu_error}</div>}
@@ -416,23 +427,25 @@ const handleSellAccumulator = async () => {
         </div>
 
         {(() => {
-            const entry = accumulator_service.open_position.buy_price
-                ? scanner.getPriceHistory(symbol, 30)[0] ?? 0
-                : 0;
-            const range_pct = accumulator_service.open_position.growth_rate * 4;
-            const estimated_high = entry * (1 + range_pct);
-            const estimated_low = entry * (1 - range_pct);
-            const prices = scanner.getPriceHistory(symbol, 30);
+    const prices = scanner.getPriceHistory(symbol, 30);
+    const has_real_barriers = accu_proposal?.high_barrier !== undefined && accu_proposal?.low_barrier !== undefined;
 
-            return (
-                <>
-                    <MiniAccumulatorChart prices={prices} high_barrier={estimated_high} low_barrier={estimated_low} />
-                    <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
-                        {localize('Range shown is an approximation for visualization — actual knockout levels are calculated by Deriv and may differ.')}
-                    </Text>
-                </>
-            );
-        })()}
+    const entry = prices[0] ?? 0;
+    const range_pct = accumulator_service.open_position.growth_rate * 4;
+    const high_barrier = has_real_barriers ? accu_proposal!.high_barrier! : entry * (1 + range_pct);
+    const low_barrier = has_real_barriers ? accu_proposal!.low_barrier! : entry * (1 - range_pct);
+
+    return (
+        <>
+            <MiniAccumulatorChart prices={prices} high_barrier={high_barrier} low_barrier={low_barrier} />
+            {!has_real_barriers && (
+                <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
+                    {localize('Range shown is an approximation — actual knockout levels are calculated by Deriv and may differ.')}
+                </Text>
+            )}
+        </>
+    );
+})()}
 
             <div className='accumulator-position'>
                 <div className='accumulator-position__row'>

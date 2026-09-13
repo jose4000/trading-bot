@@ -712,3 +712,53 @@ body.theme--dark {
         border-color: #333;
     }
 }
+
+.accu-growth-rate-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__title {
+        font-weight: 600;
+    }
+
+    &__pills {
+        display: flex;
+        gap: 6px;
+    }
+
+    &__pill {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+
+        &--active {
+            background: #1a1a1a;
+            color: #fff;
+            border-color: #1a1a1a;
+        }
+    }
+}
+
+.accu-info-row__underlined {
+    border-bottom: 1px dotted #999;
+    padding-bottom: 2px;
+}
+
+body.theme--dark {
+    .accu-growth-rate-row__pill {
+        background: #262626;
+        border-color: #444;
+        color: #fff;
+
+        &--active {
+            background: #fff;
+            color: #1a1a1a;
+        }
+    }
+}
