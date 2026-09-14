@@ -431,7 +431,11 @@ const handleSellAccumulator = async () => {
                     </strong>
                 </div>
 
-                {accu_error && <div className='proposal-preview__error'>{accu_error}</div>}
+            <div className='accu-debug-box'>
+                <div>Status: {is_buying_accu ? 'Buying...' : accu_proposal ? 'Proposal loaded ✓' : accu_error ? 'ERROR' : 'Loading proposal...'}</div>
+                {accu_error && <div className='accu-debug-box__error'>Error: {accu_error}</div>}
+                {accu_proposal && <div>Proposal ID: {accu_proposal.id}</div>}
+            </div>
 
                 <button
                     className='accu-buy-button'

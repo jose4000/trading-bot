@@ -762,3 +762,19 @@ body.theme--dark {
         }
     }
 }
+
+.accu-debug-box {
+    padding: 10px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: monospace;
+    word-break: break-word;
+
+    &__error {
+        color: #c62828;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+}
