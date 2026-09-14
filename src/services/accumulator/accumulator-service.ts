@@ -67,9 +67,15 @@ class AccumulatorService {
         if (params.take_profit !== undefined) {
             request.limit_order = { take_profit: params.take_profit };
         }
-
-        const response = await doUntilDone(() => api_base.api?.send(request), [], api_base);
-        if (response?.error) throw new Error(response.error.message || 'Failed to get proposal');
+       
+        const response = await api_base.api?.send(request);
+            if (response?.error) {
+                throw new Error(`${response.error.code}: ${response.error.message}` || 'Failed to get proposal');
+            }
+            if (!response) {
+                throw new Error('No response received from server');
+     }
+       
 
         const proposal = response?.proposal;
         if (!proposal) throw new Error('No proposal returned');
@@ -80,10 +86,13 @@ class AccumulatorService {
     }
 
     async buy(proposal_id: string, price: number, symbol: string, growth_rate: number): Promise<number> {
-        if (!api_base.api) throw new Error('No active API connection');
+    if (!api_base.api) throw new Error('No active API connection');
 
-        const response = await doUntilDone(() => api_base.api?.send({ buy: proposal_id, price }), [], api_base);
-        if (response?.error) throw new Error(response.error.message || 'Failed to place trade');
+    const response = await api_base.api.send({ buy: proposal_id, price });
+    if (response?.error) {
+        throw new Error(`${response.error.code}: ${response.error.message}` || 'Failed to place trade');
+    }
+    // ...rest unchanged
 
         const buy = response?.buy;
         if (!buy) throw new Error('No buy confirmation returned');
