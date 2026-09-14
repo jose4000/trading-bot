@@ -340,8 +340,28 @@ const handleSellAccumulator = async () => {
                         <span>{localize('Accumulators')}</span>
                     </div>
                     
-                    
                 </div>
+
+                 {/* ── Live preview chart with range lines ── */}
+        {(() => {
+            const prices = scanner.getPriceHistory(symbol, 30);
+            const entry = current_price ?? prices[prices.length - 1] ?? 0;
+            const has_real_barriers = accu_proposal?.high_barrier !== undefined && accu_proposal?.low_barrier !== undefined;
+            const range_pct = accu_growth_rate * 4;
+            const high_barrier = has_real_barriers ? accu_proposal!.high_barrier! : entry * (1 + range_pct);
+            const low_barrier = has_real_barriers ? accu_proposal!.low_barrier! : entry * (1 - range_pct);
+
+            return (
+                <>
+                    <MiniAccumulatorChart prices={prices} high_barrier={high_barrier} low_barrier={low_barrier} />
+                    {!has_real_barriers && (
+                        <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
+                            {localize('Range shown is an approximation — actual knockout levels are calculated by Deriv.')}
+                        </Text>
+                    )}
+                </>
+            );
+        })()}
 
                 <div className='accu-growth-rate-row'>
                     <Text size='xxxs' color='less-prominent' className='accu-growth-rate-row__title'>
@@ -401,12 +421,14 @@ const handleSellAccumulator = async () => {
                 <div className='accu-info-row'>
                     <span>{localize('Max. payout')}</span>
                     <strong className='accu-info-row__underlined'>
-                        {accu_proposal ? (accu_stake * Math.pow(1 + accu_growth_rate, 85)).toFixed(2) : '—'} {client?.currency}
+                        {accu_proposal?.maximum_payout?.toFixed(2) ?? '—'} {client?.currency}
                     </strong>
                 </div>
                 <div className='accu-info-row'>
                     <span>{localize('Max. ticks')}</span>
-                    <strong className='accu-info-row__underlined'>{accu_proposal ? '85' : '—'} {localize('ticks')}</strong>
+                    <strong className='accu-info-row__underlined'>
+                        {accu_proposal?.maximum_ticks ?? '—'} {localize('ticks')}
+                    </strong>
                 </div>
 
                 {accu_error && <div className='proposal-preview__error'>{accu_error}</div>}
