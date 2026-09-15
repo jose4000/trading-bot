@@ -265,7 +265,11 @@ const handleBuyAccumulator = async () => {
 };
 
 const handleSellAccumulator = async () => {
+    try {
     await accumulator_service.sell();
+    } catch (err: any) {
+        setAccuError(err.message);
+    }
 };
 
     const handleBuy = async (side: TSide) => {
@@ -502,6 +506,8 @@ const handleSellAccumulator = async () => {
                         onClick={handleSellAccumulator}
                     >
                         {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
+                        {accu_error && <div className='accu-debug-box__error'>Error: {accu_error}</div>}
+                       
                     </button>
                 )}
             </div>

@@ -17,6 +17,7 @@ export type TOpenAccumulator = {
     symbol: string;
     growth_rate: number;
     buy_price: number;
+    bid_price: number | null;
     current_spot: number | null;
     profit: number;
     is_sold: boolean;
@@ -128,6 +129,7 @@ class AccumulatorService {
             symbol,
             growth_rate,
             buy_price: buy.buy_price,
+            bid_price: null,
             current_spot: null,
             profit: 0,
             is_sold: false,
@@ -149,6 +151,7 @@ class AccumulatorService {
                 this.setOpenPosition({
                     ...this.open_position,
                     current_spot: Number(contract.current_spot ?? this.open_position.current_spot),
+                    bid_price: contract.bid_price !== undefined ? Number(contract.bid_price) : this.open_position.bid_price,
                     profit: Number(contract.profit ?? 0),
                     is_sold: Boolean(contract.is_sold),
                 });
@@ -165,12 +168,20 @@ class AccumulatorService {
     async sell(): Promise<void> {
         if (!api_base.api || !this.open_position) return;
         this.setLoading(true);
-        try {
-            const response = await api_base.api.send({ sell: this.open_position.contract_id, price: 0 });
-            if (response?.error) throw new Error(response.error.message || 'Failed to sell contract');
-        } finally {
-            this.setLoading(false);
+        
+        const price = this.open_position.bid_price ?? 0;
+
+         try {
+        const response = await Promise.race([
+            api_base.api.send({ sell: this.open_position.contract_id, price }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Sell request timed out after 10s')), 10000)),
+        ]);
+        if ((response as any)?.error) {
+            throw new Error(`${(response as any).error.code}: ${(response as any).error.message}`);
         }
+    } finally {
+        this.setLoading(false);
+    }
     }
 
     clearPosition = () => {
