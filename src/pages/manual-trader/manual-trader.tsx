@@ -493,23 +493,27 @@ const handleSellAccumulator = async () => {
                     </strong>
                 </div>
                 {accumulator_service.open_position.is_sold ? (
-                    <>
-                        <div className='accumulator-position__closed'>{localize('Contract closed')}</div>
-                        <button className='accu-buy-button' onClick={() => accumulator_service.clearPosition()}>
-                            {localize('Start New')}
-                        </button>
-                    </>
-                ) : (
-                    <button
-                        className='accu-buy-button accu-buy-button--sell'
-                        disabled={accumulator_service.is_loading}
-                        onClick={handleSellAccumulator}
-                    >
-                        {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
-                        {accu_error && <div className='accu-debug-box__error'>Error: {accu_error}</div>}
-                       
-                    </button>
-                )}
+    <>
+        <div className='accumulator-position__closed'>{localize('Contract closed')}</div>
+        <button className='accu-buy-button' onClick={() => accumulator_service.clearPosition()}>
+            {localize('Start New')}
+        </button>
+    </>
+) : (
+    <>
+        <div className='accu-debug-box'>
+            <div>Status: {accumulator_service.is_loading ? 'Selling...' : accu_error ? 'ERROR' : 'Ready'}</div>
+            {accu_error && <div className='accu-debug-box__error'>Error: {accu_error}</div>}
+        </div>
+        <button
+            className='accu-buy-button accu-buy-button--sell'
+            disabled={accumulator_service.is_loading}
+            onClick={handleSellAccumulator}
+        >
+            {accumulator_service.is_loading ? localize('Selling...') : localize('Sell Now')}
+        </button>
+    </>
+)}
             </div>
             </>
         )}
