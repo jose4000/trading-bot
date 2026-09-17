@@ -9,7 +9,8 @@ import {
     TDigitContractType,
     TProposalResult,
 } from '@/services/manual-trade/manual-trade-service';
-import MiniAccumulatorChart from '@/components/mini-accumulator-chart/mini-accumulator-chart';
+
+import AccumulatorLiveChart from '@/components/accumulator-live-chart/accumulator-live-chart';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -347,25 +348,7 @@ const handleSellAccumulator = async () => {
                 </div>
 
                  {/* ── Live preview chart with range lines ── */}
-        {(() => {
-            const prices = scanner.getPriceHistory(symbol, 30);
-            const entry = current_price ?? prices[prices.length - 1] ?? 0;
-            const has_real_barriers = accu_proposal?.high_barrier !== undefined && accu_proposal?.low_barrier !== undefined;
-            const range_pct = accu_growth_rate * 4;
-            const high_barrier = has_real_barriers ? accu_proposal!.high_barrier! : entry * (1 + range_pct);
-            const low_barrier = has_real_barriers ? accu_proposal!.low_barrier! : entry * (1 - range_pct);
-
-            return (
-                <>
-                    <MiniAccumulatorChart prices={prices} high_barrier={high_barrier} low_barrier={low_barrier} />
-                    {!has_real_barriers && (
-                        <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
-                            {localize('Range shown is an approximation — actual knockout levels are calculated by Deriv.')}
-                        </Text>
-                    )}
-                </>
-            );
-        })()}
+        <AccumulatorLiveChart high_barrier={accu_proposal?.high_barrier} low_barrier={accu_proposal?.low_barrier} />
 
                 <div className='accu-growth-rate-row'>
                     <Text size='xxxs' color='less-prominent' className='accu-growth-rate-row__title'>
@@ -456,26 +439,7 @@ const handleSellAccumulator = async () => {
             {localize('LIVE — inside range')}
         </div>
 
-        {(() => {
-    const prices = scanner.getPriceHistory(symbol, 30);
-    const has_real_barriers = accu_proposal?.high_barrier !== undefined && accu_proposal?.low_barrier !== undefined;
-
-    const entry = prices[0] ?? 0;
-    const range_pct = accumulator_service.open_position.growth_rate * 4;
-    const high_barrier = has_real_barriers ? accu_proposal!.high_barrier! : entry * (1 + range_pct);
-    const low_barrier = has_real_barriers ? accu_proposal!.low_barrier! : entry * (1 - range_pct);
-
-    return (
-        <>
-            <MiniAccumulatorChart prices={prices} high_barrier={high_barrier} low_barrier={low_barrier} />
-            {!has_real_barriers && (
-                <Text size='xxxs' color='less-prominent' className='accu-chart-disclaimer'>
-                    {localize('Range shown is an approximation — actual knockout levels are calculated by Deriv and may differ.')}
-                </Text>
-            )}
-        </>
-    );
-})()}
+       <AccumulatorLiveChart high_barrier={accu_proposal?.high_barrier} low_barrier={accu_proposal?.low_barrier} />
 
             <div className='accumulator-position'>
                 <div className='accumulator-position__row'>
