@@ -52,6 +52,7 @@ const AccumulatorLiveChart = observer(({ high_barrier, low_barrier }: TProps) =>
 
     return (
         <div className='accumulator-live-chart'>
+            <div className='accumulator-live-chart_inner'>
             <SmartChart
                 id={`accu-chart-${symbol}`}
                 key={`accu-chart-${symbol}`}
@@ -74,6 +75,7 @@ const AccumulatorLiveChart = observer(({ high_barrier, low_barrier }: TProps) =>
                 isLive
                 leftMargin={40}
             />
+        </div>
         </div>
     );
 });
