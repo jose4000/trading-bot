@@ -1,29 +1,23 @@
 .accumulator-live-chart {
     position: relative;
     width: 100%;
-    height: 220px;
+    height: 240px;
+    max-height: 240px;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid #e0e0e0;
     margin: 12px 0;
+    display: block;
 }
 
     .accumulator-live-chart__inner {
-        position: absolute;
-        inset: 0;
+        position: relative;
         width: 100%;
         height: 100%;
+        overflow: hidden;
     }
 
-        .accumulator-live-chart__inner .ciq-chart-area,
-        .accumulator-live-chart__inner .chartContainer,
-        .accumulator-live-chart__inner #chartContainer,
-        .accumulator-live-chart__inner .stx-chart {
-            width: 100% !important;
-            height: 100% !important;
-            position: relative !important;
-        }
-    
+        
 
 
 body.theme--dark .accumulator-live-chart {
