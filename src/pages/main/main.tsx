@@ -86,7 +86,7 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading', 'risk_calculator', 'bulk_trader', 'strategy_bot'];
+    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'scanner', 'analysis', 'trading_bots', 'pattern_watch', 'manual_trader', 'copy_trading', 'risk_calculator', 'bulk_trader', 'accumulators'];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -382,7 +382,7 @@ const AppWrapper = observer(() => {
                   active_tab === DBOT_TABS.MANUAL_TRADER ||
                   active_tab === DBOT_TABS.COPY_TRADING ||
                   active_tab === DBOT_TABS.RISK_CALCULATOR ||
-                  active_tab === DBOT_TABS.STRATEGY_BOT ||
+                  active_tab === DBOT_TABS.ACCUMULATORS ||
                    active_tab === DBOT_TABS.BULK_TRADER,
             })}>
                 <div
