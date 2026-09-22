@@ -638,10 +638,10 @@ const AppWrapper = observer(() => {
                                             width='24px'
                                             fill='var(--text-general)'
                                         />
-                                        <Localize i18n_default_text='Strategy Bot' />
+                                        <Localize i18n_default_text='Accumulators' />
                                     </>
                                 }
-                                id='id-strategy-bot'
+                                id='id-accumulators'
                             >
                                 <Suspense
                                     fallback={<ChunkLoader message={localize('Please wait, loading strategy bot...')} />}
