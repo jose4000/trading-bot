@@ -53,7 +53,7 @@ const ManualTrader = lazy(() => import('../manual-trader'));
 const CopyTrading = lazy(() => import('../copy-trading'));
 const RiskCalculator = lazy(() => import('../risk-calculator'));
 const BulkTrader = lazy(() => import('../bulk-trader'));
-const StrategyBot = lazy(() => import('../strategy-bot'));
+const Accumulators = lazy(() => import('../accumulators'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -646,7 +646,7 @@ const AppWrapper = observer(() => {
                                 <Suspense
                                     fallback={<ChunkLoader message={localize('Please wait, loading strategy bot...')} />}
                                 >
-                                    <StrategyBot/>
+                                    <Accumulators/>
                                 </Suspense>
                             </div>
 
