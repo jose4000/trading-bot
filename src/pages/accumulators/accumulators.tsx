@@ -5,8 +5,12 @@ import Text from '@/components/shared_ui/text';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import { accumulator_service, TAccumulatorProposal } from '@/services/accumulator/accumulator-service';
 import { useStore } from '@/hooks/useStore';
+import { useSmartChartAdaptor } from '@/hooks/useSmartChartAdaptor';
+import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
+import { SmartChart, TGranularity } from '@deriv-com/smartcharts-champion';
+import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 import './accumulators.scss';
 
 const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
@@ -23,8 +27,11 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
 };
 
 const AccumulatorsComponent = observer(() => {
-    const { client } = useStore();
-    const { isDesktop } = useDevice();
+    const { client, common, ui, chart_store } = useStore();
+    const { isDesktop, isMobile } = useDevice();
+    const { granularity, getMarketsOrder, updateSymbol } = chart_store;
+    const { adapterInitialized, chartData, getQuotes, subscribeQuotes, unsubscribeQuotes } =
+        useSmartChartAdaptor();
 
     const [symbol, setSymbol] = React.useState(VOLATILITY_SYMBOLS[4]);
     const [accu_growth_rate, setAccuGrowthRate] = React.useState(0.01);
@@ -34,6 +41,12 @@ const AccumulatorsComponent = observer(() => {
     const [accu_error, setAccuError] = React.useState<string | null>(null);
     const [is_buying_accu, setIsBuyingAccu] = React.useState(false);
 
+    // Keep the chart store's symbol in sync with the selector.
+    React.useEffect(() => {
+        updateSymbol(symbol);
+    }, [symbol, updateSymbol]);
+
+    // Fetch proposal whenever inputs change (debounced).
     React.useEffect(() => {
         if (!client?.currency || accu_stake <= 0) return;
         let cancelled = false;
@@ -80,6 +93,37 @@ const AccumulatorsComponent = observer(() => {
         }
     };
 
+    // Barriers derived from the current proposal. Recomputed only when they change.
+    const barriers = React.useMemo(() => {
+        const high = accu_proposal?.high_barrier;
+        const low = accu_proposal?.low_barrier;
+        if (high === undefined || low === undefined) return [];
+        return [
+            {
+                shade: 'BETWEEN' as const,
+                color: '#1e88e5',
+                high: String(high),
+                low: String(low),
+            },
+        ];
+    }, [accu_proposal?.high_barrier, accu_proposal?.low_barrier]);
+
+    // Stable settings object — only recomputes when theme or language changes.
+    const chart_settings = React.useMemo(
+        () => ({
+            assetInformation: false,
+            countdown: true,
+            isHighestLowestMarkerEnabled: false,
+            language: common.current_language.toLowerCase(),
+            position: 'bottom' as const,
+            theme: ui.is_dark_mode_on ? ('dark' as const) : ('light' as const),
+        }),
+        [common.current_language, ui.is_dark_mode_on]
+    );
+
+    const canRenderChart =
+        adapterInitialized && chartData.activeSymbols.length > 0 && !!symbol;
+
     return (
         <div className='tab__accumulators'>
             <div className='tab__accumulators__header'>
@@ -100,6 +144,46 @@ const AccumulatorsComponent = observer(() => {
                         </option>
                     ))}
                 </select>
+            </div>
+
+            {/*
+              Single SmartChart instance for the whole tab.
+              - Rendered ONCE, outside the pre-buy / live branches below.
+              - NO `key` prop — that would force a remount on symbol change.
+              - Wrapped in a fixed-height container so the internal Flutter
+                canvas has a real height to fill (see accumulators.scss).
+            */}
+            <div className='accumulator-chart-wrapper'>
+                {canRenderChart ? (
+                    <SmartChart
+                        id='accu-chart'
+                        barriers={barriers}
+                        showLastDigitStats={false}
+                        chartControlsWidgets={null}
+                        enabledChartFooter={false}
+                        enabledNavigationWidget={false}
+                        chartType='line'
+                        isMobile={isMobile}
+                        granularity={0 as TGranularity}
+                        getQuotes={getQuotes}
+                        subscribeQuotes={subscribeQuotes}
+                        unsubscribeQuotes={unsubscribeQuotes}
+                        chartData={{
+                            activeSymbols: chartData.activeSymbols,
+                            tradingTimes: chartData.tradingTimes,
+                        }}
+                        settings={chart_settings}
+                        symbol={symbol}
+                        isConnectionOpened={!!chart_api?.api}
+                        getMarketsOrder={getMarketsOrder}
+                        isLive
+                        leftMargin={40}
+                    />
+                ) : (
+                    <div className='accumulator-chart-wrapper__placeholder'>
+                        {localize('Loading chart...')}
+                    </div>
+                )}
             </div>
 
             <div className='accumulator-panel'>

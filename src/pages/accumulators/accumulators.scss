@@ -303,3 +303,51 @@ body.theme--dark {
         border-color: #333;
     }
 }
+
+.accumulator-chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    min-height: 240px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    margin: 12px 0;
+    isolation: isolate;
+    z-index: 0;
+
+    &__placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7c86;
+        font-size: 0.875rem;
+    }
+
+    // Force the SmartCharts internal DOM chain to fill the wrapper.
+    // Without this, .chartContainer gets height: 0 and the Flutter canvas
+    // escapes to the viewport (the "chart on top of the page" symptom).
+    .cq-context,
+    .ciq-chart-area,
+    .ciq-chart,
+    .chartContainer {
+        height: 100% !important;
+        width: 100% !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        overflow: hidden !important;
+    }
+
+    .flutter-chart {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+body.theme--dark .accumulator-chart-wrapper {
+    border-color: #333;
+}
