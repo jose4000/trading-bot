@@ -8,14 +8,35 @@
     border: 1px solid #e0e0e0;
     margin: 12px 0;
     display: block;
+    isolation: isolate;
+    z-index: 0;
 }
 
     .accumulator-live-chart_inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
+        .cq-context,
+        .ciq-chart-area,
+        .ciq-chart,
+        .chartContainer {
+
+        
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        top: auto !important;
+        left: auto !important;
     }
+       .flutter-chart {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+
+
+}
 
         
 
