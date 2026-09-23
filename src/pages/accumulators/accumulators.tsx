@@ -2,7 +2,6 @@ import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import Text from '@/components/shared_ui/text';
-import AccumulatorLiveChart from '@/components/accumulator-live-chart/accumulator-live-chart';
 import { VOLATILITY_SYMBOLS } from '@/services/scanner/types';
 import { accumulator_service, TAccumulatorProposal } from '@/services/accumulator/accumulator-service';
 import { useStore } from '@/hooks/useStore';
@@ -106,8 +105,6 @@ const AccumulatorsComponent = observer(() => {
             <div className='accumulator-panel'>
                 {!accumulator_service.open_position ? (
                     <>
-                        <AccumulatorLiveChart high_barrier={accu_proposal?.high_barrier} low_barrier={accu_proposal?.low_barrier} />
-
                         <div className='accu-growth-rate-row'>
                             <Text size='xxxs' color='less-prominent' className='accu-growth-rate-row__title'>
                                 {localize('Growth rate')}
@@ -189,8 +186,6 @@ const AccumulatorsComponent = observer(() => {
                             <span className='accu-live-badge__dot' />
                             {localize('LIVE — inside range')}
                         </div>
-
-                        <AccumulatorLiveChart high_barrier={accu_proposal?.high_barrier} low_barrier={accu_proposal?.low_barrier} />
 
                         <div className='accumulator-position'>
                             <div className='accumulator-position__row'>
