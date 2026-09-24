@@ -173,7 +173,7 @@ const AccumulatorsComponent = observer(() => {
                             tradingTimes: chartData.tradingTimes,
                         }}
                         settings={chart_settings}
-                        symbol={symbol}
+                        symbol={chart_store.symbol ?? symbol}
                         isConnectionOpened={!!chart_api?.api}
                         getMarketsOrder={getMarketsOrder}
                         isLive
