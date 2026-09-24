@@ -29,7 +29,7 @@ const SYMBOL_DISPLAY_NAMES: Record<string, string> = {
 const AccumulatorsComponent = observer(() => {
     const { client, common, ui, chart_store } = useStore();
     const { isDesktop, isMobile } = useDevice();
-    const { granularity, getMarketsOrder, updateSymbol } = chart_store;
+    const { getMarketsOrder, onSymbolChange} = chart_store;
     const { adapterInitialized, chartData, getQuotes, subscribeQuotes, unsubscribeQuotes } =
         useSmartChartAdaptor();
 
@@ -43,8 +43,8 @@ const AccumulatorsComponent = observer(() => {
 
     // Keep the chart store's symbol in sync with the selector.
     React.useEffect(() => {
-        updateSymbol(symbol);
-    }, [symbol, updateSymbol]);
+        onSymbolChange(symbol);
+    }, [symbol, onSymbolChange]);
 
     // Fetch proposal whenever inputs change (debounced).
     React.useEffect(() => {
