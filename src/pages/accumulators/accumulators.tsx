@@ -121,8 +121,10 @@ const AccumulatorsComponent = observer(() => {
         [common.current_language, ui.is_dark_mode_on]
     );
 
-    const canRenderChart =
-        adapterInitialized && chartData.activeSymbols.length > 0 && !!symbol;
+    //const canRenderChart =
+       // adapterInitialized && chartData.activeSymbols.length > 0 && !!symbol;
+       // With this for testing:
+const canRenderChart = true;
 
     return (
         <div className='tab__accumulators'>
