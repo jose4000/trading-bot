@@ -166,7 +166,7 @@ const AccumulatorsComponent = observer(() => {
                         chartControlsWidgets={null}
                         enabledChartFooter={false}
                         enabledNavigationWidget={false}
-                        chartType='line'
+                        chartType='mountain'
                         isMobile={isMobile}
                         granularity={0 as TGranularity}
                         getQuotes={getQuotes}
