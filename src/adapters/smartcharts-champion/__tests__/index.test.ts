@@ -193,6 +193,33 @@ describe('SmartCharts Champion Adapter', () => {
             expect(unsubscribe).toBeInstanceOf(Function);
         });
 
+        it('should normalize tick stream responses before invoking the callback', () => {
+            const mockCallback = jest.fn();
+            const mockSubscriptionId = 'sub-123';
+            let streamCallback: ((response: any) => void) | undefined;
+
+            (mockTransport.subscribe as jest.Mock).mockImplementation((_request, callback) => {
+                streamCallback = callback;
+                return mockSubscriptionId;
+            });
+
+            const adapter = buildSmartchartsChampionAdapter(mockTransport, mockServices);
+            const unsubscribe = adapter.subscribeQuotes({ symbol: 'R_50', granularity: 0 }, mockCallback);
+            const tick = { epoch: 1609459200, quote: 100.5 };
+
+            streamCallback?.({ tick });
+
+            expect(mockCallback).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    Date: '1609459200',
+                    Close: 100.5,
+                    tick,
+                })
+            );
+
+            unsubscribe();
+        });
+
         it('should subscribe to candle stream', () => {
             const mockCallback = jest.fn();
             const mockSubscriptionId = 'sub-456';
