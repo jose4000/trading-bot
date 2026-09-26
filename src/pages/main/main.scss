@@ -178,7 +178,7 @@
         @include desktop-screen {
             .dc-tabs__content--main__tabs > * {
                 max-width: none;
-                margin-inline: 0;
+                margin-inline: 2.4rem;
             }
         }
     }
