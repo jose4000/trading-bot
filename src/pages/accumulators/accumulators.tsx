@@ -121,12 +121,7 @@ const AccumulatorsComponent = observer(() => {
         [common.current_language, ui.is_dark_mode_on]
     );
 
-  console.log('Chart Render Check:', {
-    adapterInitialized,
-    activeSymbolsCount: chartData.activeSymbols.length,
-    symbol,
-});
-
+  
 
     const canRenderChart =
         adapterInitialized && chartData.activeSymbols.length > 0 && !!symbol;

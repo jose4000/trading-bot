@@ -3,7 +3,7 @@
  * Tests the React hook that manages the SmartCharts Champion adapter
  */
 
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 // Mock all dependencies before importing the hook
 const mockBuildAdapter = jest.fn();
@@ -104,13 +104,29 @@ describe('useSmartChartAdaptor', () => {
             expect(result.current.adapter).toBe(mockAdapter);
         });
 
-        it('should not initialize if chart_api.api is not available', () => {
+        it('should initialize when chart_api.api becomes available after mount', async () => {
+            jest.useFakeTimers();
             chart_api.api = null;
+            mockAdapter.getChartData.mockResolvedValue({
+                activeSymbols: [{ symbol: 'R_50', display_name: 'Volatility 50 Index' }],
+                tradingTimes: {},
+            });
 
-            const { result } = renderHook(() => useSmartChartAdaptor());
+            const { result, unmount } = renderHook(() => useSmartChartAdaptor());
 
             expect(result.current.adapterInitialized).toBe(false);
             expect(result.current.adapter).toBeNull();
+
+            chart_api.api = { forgetAll: jest.fn() } as any;
+            await act(async () => {
+                jest.advanceTimersByTime(250);
+            });
+
+            expect(result.current.adapterInitialized).toBe(true);
+            expect(result.current.adapter).toBe(mockAdapter);
+
+            unmount();
+            jest.useRealTimers();
         });
 
         it('should handle initialization errors', async () => {

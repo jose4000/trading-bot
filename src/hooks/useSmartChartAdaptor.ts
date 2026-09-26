@@ -78,9 +78,21 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
     }, []);
 
-    // Initialize adapter - runs once when chart_api.api is available
+    // Wait for the shared API lifecycle to initialize the chart connection.
     useEffect(() => {
-        if (!adapterInitialized && chart_api.api) {
+        if (adapterInitialized) return;
+
+        let cancelled = false;
+        let readinessTimeout: ReturnType<typeof setTimeout> | undefined;
+
+        const initializeAdapter = () => {
+            if (cancelled) return;
+
+            if (!chart_api.api) {
+                readinessTimeout = setTimeout(initializeAdapter, 250);
+                return;
+            }
+
             try {
                 const transport = createTransport();
                 const services = createServices();
@@ -100,7 +112,14 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                     setIsLoading(false);
                 }
             }
-        }
+        };
+
+        initializeAdapter();
+
+        return () => {
+            cancelled = true;
+            if (readinessTimeout) clearTimeout(readinessTimeout);
+        };
     }, [adapterInitialized]);
 
     // Load chart data when adapter is initialized
