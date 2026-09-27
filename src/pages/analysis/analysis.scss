@@ -1,9 +1,14 @@
 .tab__analysis {
     padding: 24px;
     flex: 1;
+    min-width: 0;
     min-height: 0;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1200px;
     height: 100%;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
     &__header {
@@ -11,10 +16,8 @@
     }
 
     @media (max-width: 768px) {
-    padding-bottom: 160px;
-}
-
-
+        padding: 16px 16px 160px;
+    }
 }
 
 .subtitle {
@@ -82,22 +85,21 @@
 }
 
 .digit-row {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
-    flex-wrap: nowrap;
 }
 
 .digit-cell {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    flex: 1;
+    justify-content: center;
+    min-width: 0;
 }
 
 .digit-circle {
-    width: 64px;
-    height: 64px;
+    width: min(64px, 100%);
+    aspect-ratio: 1;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -216,6 +218,8 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
         margin-top: 16px;
     }
 
