@@ -1,194 +1,737 @@
-.landing {
-    position: relative;
+// ─────────────────────────────────────────────────────────────────────────
+// Tradeflux landing — a darker, product-led aesthetic for a marketing page.
+// ─────────────────────────────────────────────────────────────────────────
+
+$ink: #0d1117;
+$ink-2: #161b22;
+$ink-3: #21262d;
+$line: #2a3139;
+$line-soft: #1e242b;
+$text: #e6edf3;
+$text-2: #8b949e;
+$text-3: #6e7681;
+$accent: #4ade80;
+$accent-2: #22c55e;
+
+$display-font: 'Instrument Serif', 'Iowan Old Style', 'Georgia', serif;
+$body-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+$mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+
+.tradeflux-landing {
+    background: $ink;
+    color: $text;
+    font-family: $body-font;
+    font-feature-settings: 'ss01', 'cv01', 'cv11';
+    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    background: radial-gradient(ellipse at top, #142016 0%, #0a0a0f 60%);
-    color: #fff;
-    overflow-x: hidden;
-    overflow-y: auto;
-}
+    line-height: 1.55;
 
-// ── Falling coins/notes ────────────────────────────
-.landing__falling-items {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    overflow: hidden;
-}
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
 
-.falling-coin,
-.falling-note {
-    position: absolute;
-    top: -60px;
-    animation-name: fall;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    opacity: 0.85;
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
 
-    svg {
-        width: 100%;
-        height: 100%;
-        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    button {
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    // ── Topbar ──────────────────────────────────────────────────────
+    &__topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 2rem;
+        padding: 1rem 2rem;
+        background: rgba(13, 17, 23, 0.85);
+        backdrop-filter: saturate(180%) blur(12px);
+        -webkit-backdrop-filter: saturate(180%) blur(12px);
+        border-bottom: 1px solid $line-soft;
+
+        @media (max-width: 720px) {
+            grid-template-columns: auto auto;
+            padding: 0.875rem 1.25rem;
+        }
+    }
+
+    &__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.625rem;
+        flex-shrink: 0;
+    }
+
+    &__brand-mark {
+        width: 24px;
+        height: 24px;
+    }
+
+    &__brand-name {
+        font-weight: 500;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+    }
+
+    &__topnav {
+        display: flex;
+        gap: 2rem;
+        justify-self: center;
+        font-size: 13px;
+        color: $text-2;
+
+        a {
+            transition: color 0.15s ease;
+
+            &:hover {
+                color: $text;
+            }
+        }
+
+        @media (max-width: 720px) {
+            display: none;
+        }
+    }
+
+    &__topbar-cta {
+        padding: 0.5rem 0.875rem;
+        font-size: 13px;
+        font-weight: 500;
+        color: $text;
+        background: transparent;
+        border: 1px solid $line;
+        border-radius: 6px;
+        transition: border-color 0.15s ease, background 0.15s ease;
+
+        &:hover {
+            border-color: $text-2;
+            background: $ink-2;
+        }
+    }
+
+    // ── Hero ────────────────────────────────────────────────────────
+    &__hero {
+        padding: 6rem 2rem 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+
+        @media (max-width: 900px) {
+            padding: 4rem 1.25rem 3rem;
+        }
+    }
+
+    &__hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        gap: 5rem;
+        align-items: center;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+    }
+
+    &__hero-copy {
+        max-width: 34rem;
+    }
+
+    &__eyebrow {
+        display: inline-block;
+        margin: 0 0 1.5rem;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: $accent;
+    }
+
+    &__headline {
+        margin: 0 0 1.25rem;
+        font-family: $display-font;
+        font-weight: 400;
+        font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+        line-height: 1.05;
+        letter-spacing: -0.025em;
+        color: $text;
+    }
+
+    &__subheadline {
+        margin: 0 0 2rem;
+        font-size: 17px;
+        line-height: 1.6;
+        color: $text-2;
+        max-width: 32rem;
+    }
+
+    &__hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.5rem;
+        align-items: center;
+        margin-bottom: 3.5rem;
+    }
+
+    &__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.375rem;
+        font-size: 14px;
+        font-weight: 500;
+        color: $ink;
+        background: $accent;
+        border: 1px solid $accent;
+        border-radius: 8px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+
+        &:hover {
+            background: $accent-2;
+            border-color: $accent-2;
+        }
+    }
+
+    &__cta-icon {
+        display: inline-flex;
+        width: 16px;
+        height: 16px;
+        transition: transform 0.15s ease;
+    }
+
+    &__cta:hover &__cta-icon {
+        transform: translateX(2px);
+    }
+
+    &__cta-secondary {
+        font-size: 14px;
+        color: $text-2;
+        border-bottom: 1px solid $line;
+        padding-bottom: 1px;
+        transition: color 0.15s ease, border-color 0.15s ease;
+
+        &:hover {
+            color: $text;
+            border-color: $text-2;
+        }
+    }
+
+    &__trust {
+        display: flex;
+        gap: 2.5rem;
+        margin: 0;
+        padding: 1.5rem 0 0;
+        border-top: 1px solid $line-soft;
+
+        > div {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        dt {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: $text-3;
+        }
+
+        dd {
+            margin: 0;
+            font-family: $display-font;
+            font-size: 24px;
+            line-height: 1;
+            color: $text;
+        }
+    }
+
+    // ── Product screenshot ──────────────────────────────────────────
+    &__hero-visual {
+        position: relative;
+    }
+
+    // ── Generic section ────────────────────────────────────────────
+    &__section {
+        padding: 6rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+
+        @media (max-width: 720px) {
+            padding: 4rem 1.25rem;
+        }
+
+        &--muted {
+            max-width: none;
+            background: $ink-2;
+            border-top: 1px solid $line-soft;
+            border-bottom: 1px solid $line-soft;
+
+            .tradeflux-landing__section-header,
+            .tradeflux-landing__steps {
+                max-width: 1200px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+    }
+
+    &__section-header {
+        max-width: 40rem;
+        margin-bottom: 3.5rem;
+    }
+
+    &__section-title {
+        margin: 0 0 0.75rem;
+        font-family: $display-font;
+        font-weight: 400;
+        font-size: clamp(2rem, 3.5vw, 2.75rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+    }
+
+    &__section-lede {
+        margin: 0;
+        font-size: 16px;
+        color: $text-2;
+        max-width: 34rem;
+    }
+
+    // ── Features ───────────────────────────────────────────────────
+    &__features {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        background: $line-soft;
+        border: 1px solid $line-soft;
+
+        @media (max-width: 900px) {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // ── Steps ──────────────────────────────────────────────────────
+    &__steps {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 2rem;
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+        }
+    }
+
+    // ── FAQ ────────────────────────────────────────────────────────
+    &__faq {
+        max-width: 46rem;
+
+        details {
+            border-bottom: 1px solid $line-soft;
+            padding: 1.25rem 0;
+
+            &:first-child {
+                border-top: 1px solid $line-soft;
+            }
+
+            &[open] summary::after {
+                transform: rotate(45deg);
+            }
+        }
+
+        summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            font-size: 15px;
+            color: $text;
+
+            &::-webkit-details-marker {
+                display: none;
+            }
+
+            &::after {
+                content: '+';
+                display: inline-block;
+                width: 1rem;
+                font-size: 18px;
+                color: $text-3;
+                transition: transform 0.2s ease;
+            }
+        }
+
+        details p {
+            margin: 1rem 0 0;
+            font-size: 14px;
+            line-height: 1.65;
+            color: $text-2;
+            max-width: 40rem;
+        }
+    }
+
+    // ── Final CTA ──────────────────────────────────────────────────
+    &__final {
+        text-align: center;
+        padding: 7rem 2rem;
+        border-top: 1px solid $line-soft;
+
+        @media (max-width: 720px) {
+            padding: 5rem 1.25rem;
+        }
+    }
+
+    &__final-title {
+        margin: 0 0 0.75rem;
+        font-family: $display-font;
+        font-weight: 400;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+    }
+
+    &__final-lede {
+        margin: 0 auto 2rem;
+        font-size: 16px;
+        color: $text-2;
+        max-width: 30rem;
+    }
+
+    // ── Footer ─────────────────────────────────────────────────────
+    &__footer {
+        border-top: 1px solid $line-soft;
+        padding: 4rem 2rem 3rem;
+        background: $ink;
+
+        @media (max-width: 720px) {
+            padding: 3rem 1.25rem 2rem;
+        }
+    }
+
+    &__footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        gap: 2rem;
+    }
+
+    &__footer-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        img {
+            width: 24px;
+            height: 24px;
+        }
+
+        p {
+            margin: 0;
+            font-family: $display-font;
+            font-size: 18px;
+            letter-spacing: -0.01em;
+        }
+    }
+
+    &__footer-note {
+        margin: 0;
+        max-width: 48rem;
+        font-size: 12px;
+        line-height: 1.7;
+        color: $text-3;
+    }
+
+    &__footer-copy {
+        margin: 0;
+        padding-top: 1.5rem;
+        border-top: 1px solid $line-soft;
+        font-size: 12px;
+        color: $text-3;
     }
 }
 
-.falling-coin {
-    animation-name: fall-spin;
-}
-
-@keyframes fall {
-    from {
-        transform: translateY(-10vh) rotate(0deg);
-    }
-    to {
-        transform: translateY(110vh) rotate(15deg);
-    }
-}
-
-@keyframes fall-spin {
-    0% {
-        transform: translateY(-10vh) rotateY(0deg);
-    }
-    100% {
-        transform: translateY(110vh) rotateY(720deg);
-    }
-}
-
-// ── Hero ────────────────────────────────────────────
-.landing__hero {
-    position: relative;
-    z-index: 2;
+// ─────────────────────────────────────────────────────────────────────────
+// Feature card
+// ─────────────────────────────────────────────────────────────────────────
+.tradeflux-feature {
+    background: $ink;
+    padding: 2rem 1.75rem;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 80px 24px 60px;
-    max-width: 720px;
-    margin: 0 auto;
-}
-
-.landing__logo {
-    height: 56px;
-    margin-bottom: 32px;
-}
-
-.landing__headline {
-    font-size: 40px;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #ffffff, #a5d6a7);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
-
-.landing__subheadline {
-    font-size: 16px;
-    color: #cfd8cf;
-    line-height: 1.6;
-    margin-bottom: 32px;
-    max-width: 520px;
-}
-
-.landing__cta {
-    padding: 16px 40px;
-    border-radius: 30px;
-    border: none;
-    background: linear-gradient(135deg, #4caf50, #2e7d32);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.35);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    gap: 0.75rem;
+    transition: background 0.2s ease;
 
     &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(76, 175, 80, 0.45);
-    }
-}
-
-.landing__disclaimer {
-    margin-top: 20px;
-    font-size: 11px;
-    color: #777;
-    max-width: 420px;
-}
-
-// ── Features ──────────────────────────────────────
-.landing__features {
-    position: relative;
-    z-index: 2;
-    padding: 40px 24px 80px;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.landing__features-title {
-    text-align: center;
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 40px;
-}
-
-.landing__features-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-}
-
-@media (min-width: 640px) {
-    .landing__features-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1000px) {
-    .landing__features-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.feature-card {
-    padding: 24px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(4px);
-    transition: border-color 0.2s ease, transform 0.15s ease;
-
-    &:hover {
-        border-color: rgba(76, 175, 80, 0.4);
-        transform: translateY(-3px);
+        background: $ink-2;
     }
 
     &__icon {
-        font-size: 28px;
-        display: block;
-        margin-bottom: 12px;
+        display: inline-flex;
+        width: 28px;
+        height: 28px;
+        color: $accent;
+        margin-bottom: 0.5rem;
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
     }
 
-    &__title {
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 8px;
+    &__name {
+        margin: 0;
+        font-family: $display-font;
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: $text;
     }
 
-    &__desc {
-        font-size: 12px;
-        color: #a8b5a8;
-        line-height: 1.5;
+    &__benefit {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.55;
+        color: $text-2;
+    }
+
+    &__example {
+        margin: 0.5rem 0 0;
+        padding-top: 0.75rem;
+        border-top: 1px solid $line-soft;
+        font-size: 13px;
+        line-height: 1.55;
+        color: $text-3;
     }
 }
 
-// ── Footer ────────────────────────────────────────
-.landing__footer {
+// ─────────────────────────────────────────────────────────────────────────
+// Step
+// ─────────────────────────────────────────────────────────────────────────
+.tradeflux-step {
     position: relative;
-    z-index: 2;
-    text-align: center;
-    padding: 24px;
-    font-size: 11px;
-    color: #666;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid $line;
+
+    &__n {
+        font-family: $mono-font;
+        font-size: 12px;
+        letter-spacing: 0.15em;
+        color: $accent;
+    }
+
+    &__title {
+        margin: 0;
+        font-family: $display-font;
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: $text;
+    }
+
+    &__desc {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: $text-2;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Product shot — the fake UI preview in the hero
+// ─────────────────────────────────────────────────────────────────────────
+.product-shot {
+    background: $ink-2;
+    border: 1px solid $line;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.03) inset,
+        0 30px 60px -20px rgba(0, 0, 0, 0.6),
+        0 12px 24px -8px rgba(0, 0, 0, 0.4);
+
+    &__chrome {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid $line-soft;
+        background: $ink-3;
+    }
+
+    &__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: $line;
+        flex-shrink: 0;
+
+        &:nth-child(1) {
+            background: #3a3f46;
+        }
+        &:nth-child(2) {
+            background: #3a3f46;
+        }
+        &:nth-child(3) {
+            background: #3a3f46;
+        }
+    }
+
+    &__title {
+        margin-left: 0.75rem;
+        font-family: $mono-font;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        color: $text-3;
+    }
+
+    &__body {
+        padding: 1.5rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    &__row {
+        display: grid;
+        grid-template-columns: 44px 1fr 36px;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__label {
+        font-family: $mono-font;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: $text-2;
+    }
+
+    &__bar {
+        display: block;
+        position: relative;
+        height: 6px;
+        background: $ink-3;
+        border-radius: 3px;
+        overflow: hidden;
+
+        > span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, $accent 0%, $accent-2 100%);
+            border-radius: 3px;
+        }
+    }
+
+    &__value {
+        font-family: $mono-font;
+        font-size: 11px;
+        text-align: right;
+        color: $text-2;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__digits {
+        margin-top: 0.5rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid $line-soft;
+
+        > span {
+            display: block;
+            font-family: $mono-font;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: $text-3;
+            margin-bottom: 0.75rem;
+        }
+    }
+
+    &__digits-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 0.5rem;
+        align-items: end;
+        height: 90px;
+    }
+
+    &__digit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.375rem;
+        height: 100%;
+        position: relative;
+    }
+
+    &__digit-fill {
+        display: block;
+        width: 100%;
+        background: linear-gradient(180deg, $accent 0%, $accent-2 100%);
+        border-radius: 2px;
+        min-height: 4px;
+    }
+
+    &__digit em {
+        font-family: $mono-font;
+        font-style: normal;
+        font-size: 10px;
+        color: $text-3;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Responsive tweaks for product shot
+// ─────────────────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+    .product-shot {
+        &__row {
+            grid-template-columns: 40px 1fr 32px;
+            gap: 0.625rem;
+        }
+
+        &__digits-grid {
+            height: 72px;
+            gap: 0.375rem;
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .product-shot {
+        &__body {
+            padding: 1.25rem 1rem;
+            gap: 1rem;
+        }
+
+        &__digits-grid {
+            height: 60px;
+        }
+
+        &__digit em {
+            font-size: 9px;
+        }
+    }
 }
