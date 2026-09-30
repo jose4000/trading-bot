@@ -1,22 +1,36 @@
 // ─────────────────────────────────────────────────────────────────────────
-// Tradeflux landing — a darker, product-led aesthetic for a marketing page.
+// Tradeflux landing — deep violet + warm amber palette.
+// No green. No gradients-on-gradients. No emoji.
 // ─────────────────────────────────────────────────────────────────────────
 
-$ink: #0d1117;
-$ink-2: #161b22;
-$ink-3: #21262d;
-$line: #2a3139;
-$line-soft: #1e242b;
-$text: #e6edf3;
-$text-2: #8b949e;
-$text-3: #6e7681;
-$accent: #4ade80;
-$accent-2: #22c55e;
+// ── Palette ──────────────────────────────────────────────────────────────
+$ink: #0a0a0f;          // page background — near-black, slight violet undertone
+$ink-2: #101018;        // elevated surfaces
+$ink-3: #16161f;        // chrome, subtle fills
+$ink-4: #1c1c26;        // hover states
 
+$line: #262633;         // borders on filled surfaces
+$line-soft: #1a1a24;    // borders on quiet surfaces
+
+$text: #eceaf1;         // primary text — off-white with a hint of violet
+$text-2: #9d9aad;       // secondary text
+$text-3: #6b6880;       // tertiary text, meta
+
+$accent: #a78bfa;       // primary violet
+$accent-2: #8b5cf6;     // hover violet
+$accent-soft: #c4b5fd;  // light violet for subtle text
+
+$amber: #fbbf24;        // secondary accent — used sparingly
+$amber-deep: #f59e0b;   // for gradients on "signal" bars
+
+$danger: #f87171;       // errors, destructive states
+
+// ── Type ─────────────────────────────────────────────────────────────────
 $display-font: 'Instrument Serif', 'Iowan Old Style', 'Georgia', serif;
 $body-font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
 
+// ── Root ─────────────────────────────────────────────────────────────────
 .tradeflux-landing {
     background: $ink;
     color: $text;
@@ -25,6 +39,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     line-height: 1.55;
+    overflow-x: hidden;
 
     *,
     *::before,
@@ -42,6 +57,26 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         cursor: pointer;
     }
 
+    // Ambient background — very subtle violet radial glow in the top-right
+    // and a second one behind the hero. Feels engineered, not decorative.
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -200px;
+        right: -200px;
+        width: 700px;
+        height: 700px;
+        background: radial-gradient(
+            circle,
+            rgba(167, 139, 250, 0.08) 0%,
+            rgba(167, 139, 250, 0) 70%
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+
     // ── Topbar ──────────────────────────────────────────────────────
     &__topbar {
         position: sticky;
@@ -52,10 +87,11 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         align-items: center;
         gap: 2rem;
         padding: 1rem 2rem;
-        background: rgba(13, 17, 23, 0.85);
-        backdrop-filter: saturate(180%) blur(12px);
-        -webkit-backdrop-filter: saturate(180%) blur(12px);
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: saturate(180%) blur(14px);
+        -webkit-backdrop-filter: saturate(180%) blur(14px);
         border-bottom: 1px solid $line-soft;
+        position: relative;
 
         @media (max-width: 720px) {
             grid-template-columns: auto auto;
@@ -79,6 +115,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         font-weight: 500;
         font-size: 15px;
         letter-spacing: -0.01em;
+        color: $text;
     }
 
     &__topnav {
@@ -112,8 +149,9 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         transition: border-color 0.15s ease, background 0.15s ease;
 
         &:hover {
-            border-color: $text-2;
-            background: $ink-2;
+            border-color: $accent;
+            background: rgba(167, 139, 250, 0.06);
+            color: $accent-soft;
         }
     }
 
@@ -122,6 +160,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         padding: 6rem 2rem 4rem;
         max-width: 1200px;
         margin: 0 auto;
+        position: relative;
+        z-index: 1;
 
         @media (max-width: 900px) {
             padding: 4rem 1.25rem 3rem;
@@ -162,6 +202,16 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         line-height: 1.05;
         letter-spacing: -0.025em;
         color: $text;
+
+        // Subtle gradient on the last word for editorial emphasis.
+        // Uses ::after so we don't need to modify the JSX.
+        em {
+            font-style: italic;
+            background: linear-gradient(90deg, $accent 0%, $accent-soft 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     }
 
     &__subheadline {
@@ -191,11 +241,13 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         background: $accent;
         border: 1px solid $accent;
         border-radius: 8px;
-        transition: background 0.15s ease, border-color 0.15s ease;
+        transition: background 0.15s ease, border-color 0.15s ease,
+            box-shadow 0.2s ease;
 
         &:hover {
             background: $accent-2;
             border-color: $accent-2;
+            box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15);
         }
     }
 
@@ -218,8 +270,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         transition: color 0.15s ease, border-color 0.15s ease;
 
         &:hover {
-            color: $text;
-            border-color: $text-2;
+            color: $accent;
+            border-color: $accent;
         }
     }
 
@@ -262,6 +314,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         padding: 6rem 2rem;
         max-width: 1200px;
         margin: 0 auto;
+        position: relative;
+        z-index: 1;
 
         @media (max-width: 720px) {
             padding: 4rem 1.25rem;
@@ -294,6 +348,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         font-size: clamp(2rem, 3.5vw, 2.75rem);
         line-height: 1.1;
         letter-spacing: -0.02em;
+        color: $text;
     }
 
     &__section-lede {
@@ -352,6 +407,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
 
             &[open] summary::after {
                 transform: rotate(45deg);
+                color: $accent;
             }
         }
 
@@ -364,6 +420,11 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
             gap: 1rem;
             font-size: 15px;
             color: $text;
+            transition: color 0.15s ease;
+
+            &:hover {
+                color: $accent;
+            }
 
             &::-webkit-details-marker {
                 display: none;
@@ -375,7 +436,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
                 width: 1rem;
                 font-size: 18px;
                 color: $text-3;
-                transition: transform 0.2s ease;
+                transition: transform 0.2s ease, color 0.15s ease;
             }
         }
 
@@ -393,6 +454,26 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         text-align: center;
         padding: 7rem 2rem;
         border-top: 1px solid $line-soft;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+
+        // Second ambient glow behind the final CTA — mirrors the hero
+        &::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 300px;
+            background: radial-gradient(
+                ellipse,
+                rgba(167, 139, 250, 0.06) 0%,
+                rgba(167, 139, 250, 0) 70%
+            );
+            pointer-events: none;
+        }
 
         @media (max-width: 720px) {
             padding: 5rem 1.25rem;
@@ -406,6 +487,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         font-size: clamp(2rem, 4vw, 3rem);
         line-height: 1.1;
         letter-spacing: -0.02em;
+        color: $text;
+        position: relative;
     }
 
     &__final-lede {
@@ -413,6 +496,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         font-size: 16px;
         color: $text-2;
         max-width: 30rem;
+        position: relative;
     }
 
     // ── Footer ─────────────────────────────────────────────────────
@@ -420,6 +504,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         border-top: 1px solid $line-soft;
         padding: 4rem 2rem 3rem;
         background: $ink;
+        position: relative;
+        z-index: 1;
 
         @media (max-width: 720px) {
             padding: 3rem 1.25rem 2rem;
@@ -448,6 +534,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
             font-family: $display-font;
             font-size: 18px;
             letter-spacing: -0.01em;
+            color: $text;
         }
     }
 
@@ -469,7 +556,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Feature card
+// Feature card — amber accent strip on hover instead of green check
 // ─────────────────────────────────────────────────────────────────────────
 .tradeflux-feature {
     background: $ink;
@@ -478,9 +565,29 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
     flex-direction: column;
     gap: 0.75rem;
     transition: background 0.2s ease;
+    position: relative;
+
+    // Thin amber strip that appears on hover — the one place we use amber
+    // in the feature grid, keeps the accent meaningful.
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, $accent 0%, $amber 100%);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
 
     &:hover {
         background: $ink-2;
+
+        &::before {
+            transform: scaleX(1);
+        }
     }
 
     &__icon {
@@ -534,11 +641,13 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
     padding-top: 1.5rem;
     border-top: 1px solid $line;
 
+    // Step number in amber — the second (and last) use of amber on the page.
+    // Using it twice and only twice is what makes it feel intentional.
     &__n {
         font-family: $mono-font;
         font-size: 12px;
         letter-spacing: 0.15em;
-        color: $accent;
+        color: $amber;
     }
 
     &__title {
@@ -570,7 +679,8 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.03) inset,
         0 30px 60px -20px rgba(0, 0, 0, 0.6),
-        0 12px 24px -8px rgba(0, 0, 0, 0.4);
+        0 12px 24px -8px rgba(0, 0, 0, 0.4),
+        0 0 60px -20px rgba(167, 139, 250, 0.25);
 
     &__chrome {
         display: flex;
@@ -587,16 +697,6 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
         border-radius: 50%;
         background: $line;
         flex-shrink: 0;
-
-        &:nth-child(1) {
-            background: #3a3f46;
-        }
-        &:nth-child(2) {
-            background: #3a3f46;
-        }
-        &:nth-child(3) {
-            background: #3a3f46;
-        }
     }
 
     &__title {
@@ -641,6 +741,13 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
             height: 100%;
             background: linear-gradient(90deg, $accent 0%, $accent-2 100%);
             border-radius: 3px;
+        }
+
+        // The two loudest signals get amber fill — reads as "hot" without
+        // making the whole chart one color.
+        &:nth-of-type(1) > span,
+        &:nth-of-type(2) > span {
+            background: linear-gradient(90deg, $amber 0%, $amber-deep 100%);
         }
     }
 
@@ -689,7 +796,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
     &__digit-fill {
         display: block;
         width: 100%;
-        background: linear-gradient(180deg, $accent 0%, $accent-2 100%);
+        background: linear-gradient(180deg, $accent-soft 0%, $accent 100%);
         border-radius: 2px;
         min-height: 4px;
     }
@@ -703,7 +810,7 @@ $mono-font: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Responsive tweaks for product shot
+// Responsive tweaks
 // ─────────────────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
     .product-shot {
