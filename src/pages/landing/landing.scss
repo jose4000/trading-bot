@@ -1,3 +1,10 @@
+// Force the true document root to allow vertical scrolling on this route,
+// overriding whatever height/overflow Layout's ancestor chain sets globally.
+html, body {
+    height: auto !important;
+    overflow-y: auto !important;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Tradeflux landing — deep violet + warm amber palette.
 // No green. No gradients-on-gradients. No emoji.
