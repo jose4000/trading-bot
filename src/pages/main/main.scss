@@ -77,17 +77,16 @@
             &__list {
                 background: var(--general-section-1);
                 justify-content: start;
-
-                @include mobile-or-tablet-screen {
-                    overflow-x: auto;
-                    overflow-y: hidden;
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+                flex-wrap: nowrap;
 
                     &::-webkit-scrollbar {
                         display: none;
                     }
-                }
+                
 
                 &--header {
                     &--main {

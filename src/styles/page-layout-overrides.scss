@@ -1,0 +1,21 @@
+// Unified desktop layout cap: every tab page gets capped at a readable
+// width and centered, instead of stretching edge-to-edge on wide screens.
+// This single file supersedes the individual max-width values previously
+// set per-page (480px/560px/600px/640px/900px/1200px) with one consistent rule.
+.tab__scanner,
+.tab__analysis,
+.tab__manual-trader,
+.tab__bulk-trader,
+.tab__trading-bots,
+.tab__pattern-watch,
+.tab__copy-trading,
+.tab__risk-calculator,
+.tab__accumulators,
+.tab__strategy-bot,
+.term-scanner {
+    max-width: 1000px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
