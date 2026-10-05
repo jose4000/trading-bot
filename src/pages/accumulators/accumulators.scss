@@ -1,18 +1,31 @@
 .tab__accumulators {
-    padding: 20px 24px 32px;
-    max-width: 540px;
-    margin: 0 auto;
-    height: 100%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    padding:16px;
+    max-width: none;
+    grid-template-columns: 1fr 380px;
+    margin: 0;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+
+     @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: auto;
+    }
+   
 
     &__header {
-        margin-bottom: 20px;
+        grid-column: 1 / -1;
+        margin-bottom: 8px;
     }
 
-    @media (max-width: 768px) {
-        padding-bottom: 160px;
+    &__chart-area {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        gap: 8px;
     }
+
 }
 
 .subtitle {
@@ -305,14 +318,13 @@ body.theme--dark {
 }
 
 .accumulator-chart-wrapper {
-    position: relative;
+     position: relative;
+    flex: 1 1 auto;
+    min-height: 400px;
     width: 100%;
-    height: 360px;
-    min-height: 360px;
     overflow: hidden;
     border-radius: 10px;
     border: 1px solid #e0e0e0;
-    margin: 12px 0;
     isolation: isolate;
     z-index: 0;
 
@@ -322,7 +334,7 @@ body.theme--dark {
         justify-content: center;
         height: 100%;
         color: #6b7c86;
-        font-size: 0.875rem;
+       
     }
 
 }

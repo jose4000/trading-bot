@@ -139,55 +139,50 @@ const AccumulatorsComponent = observer(() => {
                 </Text>
             </div>
 
-            <div className='trade-form__row'>
-                <label>{localize('Market')}</label>
-                <select value={symbol} onChange={e => setSymbol(e.target.value)}>
-                    {VOLATILITY_SYMBOLS.map(s => (
-                        <option key={s} value={s}>
-                            {SYMBOL_DISPLAY_NAMES[s] ?? s}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            <div className='tab__accumulators__chart-area'>
+                <div className='trade-form__row'>
+                    <label>{localize('Market')}</label>
+                    <select value={symbol} onChange={e => setSymbol(e.target.value)}>
+                        {VOLATILITY_SYMBOLS.map(s => (
+                            <option key={s} value={s}>
+                                {SYMBOL_DISPLAY_NAMES[s] ?? s}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-            {/*
-              Single SmartChart instance for the whole tab.
-              - Rendered ONCE, outside the pre-buy / live branches below.
-              - NO `key` prop — that would force a remount on symbol change.
-              - Wrapped in a fixed-height container so the internal Flutter
-                canvas has a real height to fill (see accumulators.scss).
-            */}
-            <div className='accumulator-chart-wrapper'>
-                {canRenderChart ? (
-                    <SmartChart
-                        id='accu-chart'
-                        barriers={barriers}
-                        showLastDigitStats={false}
-                        chartControlsWidgets={null}
-                        enabledChartFooter={false}
-                        enabledNavigationWidget={false}
-                        chartType='mountain'
-                        isMobile={isMobile}
-                        granularity={0 as TGranularity}
-                        getQuotes={getQuotes}
-                        subscribeQuotes={subscribeQuotes}
-                        unsubscribeQuotes={unsubscribeQuotes}
-                        chartData={{
-                            activeSymbols: chartData.activeSymbols,
-                            tradingTimes: chartData.tradingTimes,
-                        }}
-                        settings={chart_settings}
-                        symbol={chart_store.symbol ?? symbol}
-                        isConnectionOpened={!!chart_api?.api}
-                        getMarketsOrder={getMarketsOrder}
-                        isLive
-                        leftMargin={40}
-                    />
-                ) : (
-                    <div className='accumulator-chart-wrapper__placeholder'>
-                        {localize('Loading chart...')}
-                    </div>
-                )}
+                <div className='accumulator-chart-wrapper'>
+                    {canRenderChart ? (
+                        <SmartChart
+                            id='accu-chart'
+                            barriers={barriers}
+                            showLastDigitStats={false}
+                            chartControlsWidgets={null}
+                            enabledChartFooter={false}
+                            enabledNavigationWidget={false}
+                            chartType='mountain'
+                            isMobile={isMobile}
+                            granularity={0 as TGranularity}
+                            getQuotes={getQuotes}
+                            subscribeQuotes={subscribeQuotes}
+                            unsubscribeQuotes={unsubscribeQuotes}
+                            chartData={{
+                                activeSymbols: chartData.activeSymbols,
+                                tradingTimes: chartData.tradingTimes,
+                            }}
+                            settings={chart_settings}
+                            symbol={symbol}
+                            isConnectionOpened={!!chart_api?.api}
+                            getMarketsOrder={getMarketsOrder}
+                            isLive
+                            leftMargin={40}
+                        />
+                    ) : (
+                        <div className='accumulator-chart-wrapper__placeholder'>
+                            {localize('Loading chart...')}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className='accumulator-panel'>
