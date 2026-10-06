@@ -175,6 +175,7 @@ const AccumulatorsComponent = observer(() => {
                             isConnectionOpened={!!chart_api?.api}
                             getMarketsOrder={getMarketsOrder}
                             isLive
+                            startWithDataFitMode
                             leftMargin={40}
                         />
                     ) : (
